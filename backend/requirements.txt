@@ -1,0 +1,14 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+pydantic==2.9.2
+pydantic-settings==2.6.1
+sqlmodel==0.0.22
+aiosqlite==0.20.0
+python-dotenv==1.0.1
+httpx==0.27.2
+pillow==11.0.0
+pymupdf==1.24.14
+google-generativeai==0.8.3
+# Docling — install separately if build fails: pip install docling
+# docling==2.11.0

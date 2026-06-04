@@ -1,0 +1,44 @@
+INVOICE
+
+Invoice No: INV-2024-8841
+Date: 2024-11-15
+Shipment ID: SHP-10488
+
+Seller: FastFreight Logistics Pvt. Ltd.
+         12 Industrial Zone, Sector 9
+         Mumbai, MH 400001
+
+Buyer:  TechParts India Ltd.
+        88 Commerce Park, Andheri East
+        Mumbai, MH 400069
+
+Bill of Lading: BOL-FFL-88120
+Tracking No: SHP-10488
+
+-----------------------------------------------
+Item Description          Qty    Unit Price   Total
+-----------------------------------------------
+Electronic Components     500    $120.00      $60,000.00
+(Model: EC-5500 Series)
+Packaging: Double-walled corrugated cartons
+Weight: 1,200 kg  |  Volume: 4.5 CBM
+-----------------------------------------------
+Subtotal:                                $60,000.00
+Freight:                                  $2,400.00
+Insurance:                                $1,200.00
+-----------------------------------------------
+TOTAL:                                   $63,600.00
+-----------------------------------------------
+
+Shipment Details:
+  Origin: Mumbai Port (INBOM)
+  Destination: Delhi Warehouse #4
+  Estimated Delivery: 2024-11-18
+  Carrier: BlueLine Transport
+  Driver: Rajesh Kumar  |  Vehicle: MH-01-AB-4422
+
+Terms: FOB Origin. Title passes upon handover to carrier.
+Payment: Net 30 days from invoice date.
+
+Authorized Signatory: __________________
+For: FastFreight Logistics Pvt. Ltd.
