@@ -1,0 +1,397 @@
+{
+  "metadata": {
+    "incident_id": "demo-incident-001",
+    "job_id": "demo-job-001",
+    "graph_version": "v1",
+    "created_at": "2024-11-22T10:45:00Z",
+    "input_hash": "abc123demo",
+    "pipeline_versions": { "graph_builder": "1.0.0", "correlator": "1.0.0" },
+    "model_calls": []
+  },
+  "nodes": [
+    {
+      "id": "doc_invoice",
+      "type": "document",
+      "subtype": "invoice_pdf",
+      "label": "Invoice PDF",
+      "description": "Shipping invoice or bill of lading",
+      "confidence": 1.0,
+      "source_ref_ids": [],
+      "data": {
+        "document_type": "invoice_pdf",
+        "filename": "invoice_SHP-10488.txt",
+        "parser": "pymupdf",
+        "page_count": 1
+      }
+    },
+    {
+      "id": "doc_email",
+      "type": "document",
+      "subtype": "complaint_email",
+      "label": "Complaint Email",
+      "description": "Customer damage complaint",
+      "confidence": 1.0,
+      "source_ref_ids": [],
+      "data": {
+        "document_type": "complaint_email",
+        "filename": "complaint_email_SHP-10488.eml",
+        "parser": "email_module"
+      }
+    },
+    {
+      "id": "doc_image",
+      "type": "document",
+      "subtype": "damage_image",
+      "label": "Damage Photo",
+      "description": "Physical damage photograph",
+      "confidence": 1.0,
+      "source_ref_ids": [],
+      "data": {
+        "document_type": "damage_image",
+        "filename": "damage_photo.jpg",
+        "parser": "gemini_vision"
+      }
+    },
+    {
+      "id": "ent_shipment_id",
+      "type": "entity",
+      "subtype": "shipment_id",
+      "label": "SHP-10488",
+      "confidence": 0.98,
+      "source_ref_ids": ["sref_001", "sref_002"],
+      "data": {
+        "normalized_value": "SHP10488",
+        "mention_count": 3,
+        "document_roles": ["invoice_pdf", "complaint_email"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "ent_invoice_no",
+      "type": "entity",
+      "subtype": "shipment_id",
+      "label": "INV-2024-8841",
+      "confidence": 0.95,
+      "source_ref_ids": ["sref_003", "sref_004"],
+      "data": {
+        "normalized_value": "INV20248841",
+        "mention_count": 2,
+        "document_roles": ["invoice_pdf", "complaint_email"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "ent_amount",
+      "type": "entity",
+      "subtype": "amount",
+      "label": "$63,600.00",
+      "confidence": 0.92,
+      "source_ref_ids": ["sref_005"],
+      "data": {
+        "normalized_value": "63600",
+        "mention_count": 2,
+        "document_roles": ["invoice_pdf", "complaint_email"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "ent_date_invoice",
+      "type": "entity",
+      "subtype": "date",
+      "label": "2024-11-15",
+      "confidence": 0.90,
+      "source_ref_ids": ["sref_006"],
+      "data": {
+        "normalized_value": "2024-11-15",
+        "mention_count": 1,
+        "document_roles": ["invoice_pdf"],
+        "cross_doc": false
+      }
+    },
+    {
+      "id": "ent_damage_crushed",
+      "type": "observation",
+      "subtype": "damage_observation",
+      "label": "crushed corner",
+      "description": "Multiple cartons with crushed corner damage",
+      "confidence": 0.93,
+      "severity": "medium",
+      "source_ref_ids": ["sref_007", "sref_008"],
+      "data": {
+        "normalized_value": "crushed_corner",
+        "mention_count": 2,
+        "document_roles": ["complaint_email", "damage_image"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "ent_damage_water",
+      "type": "observation",
+      "subtype": "damage_observation",
+      "label": "water damage",
+      "description": "Three cartons with water stains and wet packaging",
+      "confidence": 0.88,
+      "severity": "high",
+      "source_ref_ids": ["sref_009", "sref_010"],
+      "data": {
+        "normalized_value": "water_damage",
+        "mention_count": 2,
+        "document_roles": ["complaint_email", "damage_image"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "ent_damage_missing",
+      "type": "anomaly",
+      "subtype": "damage_observation",
+      "label": "shortage: 13 units",
+      "description": "487 delivered vs 500 invoiced — 13 units missing ($1,560)",
+      "confidence": 0.91,
+      "severity": "high",
+      "source_ref_ids": ["sref_011", "sref_012"],
+      "data": {
+        "normalized_value": "missing_item",
+        "mention_count": 2,
+        "document_roles": ["invoice_pdf", "complaint_email"],
+        "cross_doc": true
+      }
+    },
+    {
+      "id": "risk_demo",
+      "type": "risk",
+      "label": "HIGH RISK",
+      "description": "Composite risk score: 82/100",
+      "confidence": 1.0,
+      "data": {
+        "risk_score": 82,
+        "risk_label": "high",
+        "evidence_strength": 0.87,
+        "damage_severity": 0.85,
+        "financial_exposure": 0.95,
+        "urgency": 1.0,
+        "inconsistency_penalty": 0.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_inv_shp",
+      "source": "doc_invoice",
+      "target": "ent_shipment_id",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.98,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_001"]
+    },
+    {
+      "id": "e_email_shp",
+      "source": "doc_email",
+      "target": "ent_shipment_id",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.97,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_002"]
+    },
+    {
+      "id": "e_inv_invno",
+      "source": "doc_invoice",
+      "target": "ent_invoice_no",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.95,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_003"]
+    },
+    {
+      "id": "e_email_invno",
+      "source": "doc_email",
+      "target": "ent_invoice_no",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.93,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_004"]
+    },
+    {
+      "id": "e_inv_amt",
+      "source": "doc_invoice",
+      "target": "ent_amount",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.92,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_005"]
+    },
+    {
+      "id": "e_email_crush",
+      "source": "doc_email",
+      "target": "ent_damage_crushed",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.93,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_007"]
+    },
+    {
+      "id": "e_img_crush",
+      "source": "doc_image",
+      "target": "ent_damage_crushed",
+      "type": "contains",
+      "label": "vision detected",
+      "confidence": 0.88,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_008"]
+    },
+    {
+      "id": "e_email_water",
+      "source": "doc_email",
+      "target": "ent_damage_water",
+      "type": "contains",
+      "label": "contains",
+      "confidence": 0.88,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_009"]
+    },
+    {
+      "id": "e_img_water",
+      "source": "doc_image",
+      "target": "ent_damage_water",
+      "type": "contains",
+      "label": "vision detected",
+      "confidence": 0.85,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_010"]
+    },
+    {
+      "id": "e_shp_missing",
+      "source": "ent_shipment_id",
+      "target": "ent_damage_missing",
+      "type": "supports",
+      "label": "SHP-10488 linked to shortage",
+      "confidence": 0.87,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_001", "sref_011"],
+      "confidence_breakdown": {
+        "final": 0.87,
+        "threshold": 0.65,
+        "decision": "accept",
+        "components": {
+          "identifier_score": 1.0,
+          "party_score": 0.5,
+          "temporal_score": 0.3,
+          "semantic_damage_score": 0.9,
+          "vision_text_score": 0.0,
+          "model_adjudication_score": 0.0
+        },
+        "weights": {
+          "identifier_score": 0.40,
+          "party_score": 0.15,
+          "temporal_score": 0.10,
+          "semantic_damage_score": 0.20,
+          "vision_text_score": 0.10,
+          "model_adjudication_score": 0.05
+        },
+        "calibration_note": "High-confidence match: shipment ID found in both invoice and complaint"
+      },
+      "explanation_id": "expl_001"
+    },
+    {
+      "id": "e_crush_corr",
+      "source": "ent_damage_crushed",
+      "target": "ent_damage_water",
+      "type": "correlates_with",
+      "label": "Both report damage",
+      "confidence": 0.74,
+      "status": "probable",
+      "evidence_ref_ids": ["sref_007", "sref_009"],
+      "confidence_breakdown": {
+        "final": 0.74,
+        "threshold": 0.65,
+        "decision": "warn",
+        "components": {
+          "identifier_score": 0.0,
+          "party_score": 0.0,
+          "temporal_score": 0.6,
+          "semantic_damage_score": 0.9,
+          "vision_text_score": 0.85,
+          "model_adjudication_score": 0.0
+        },
+        "weights": {
+          "identifier_score": 0.40,
+          "party_score": 0.15,
+          "temporal_score": 0.10,
+          "semantic_damage_score": 0.20,
+          "vision_text_score": 0.10,
+          "model_adjudication_score": 0.05
+        },
+        "calibration_note": "Text + vision corroboration of damage type"
+      }
+    },
+    {
+      "id": "e_crush_risk",
+      "source": "ent_damage_crushed",
+      "target": "risk_demo",
+      "type": "causes_risk",
+      "label": "contributes to risk",
+      "confidence": 0.93,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_007"]
+    },
+    {
+      "id": "e_water_risk",
+      "source": "ent_damage_water",
+      "target": "risk_demo",
+      "type": "causes_risk",
+      "label": "contributes to risk",
+      "confidence": 0.88,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_009"]
+    },
+    {
+      "id": "e_missing_risk",
+      "source": "ent_damage_missing",
+      "target": "risk_demo",
+      "type": "causes_risk",
+      "label": "contributes to risk",
+      "confidence": 0.91,
+      "status": "confirmed",
+      "evidence_ref_ids": ["sref_011"]
+    }
+  ],
+  "source_refs": [
+    { "id": "sref_001", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Shipment ID: SHP-10488", "char_start": 120, "char_end": 142, "hash": "abc001" },
+    { "id": "sref_002", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "Shipment ID SHP-10488 (Invoice No: INV-2024-8841", "char_start": 200, "char_end": 250, "hash": "abc002" },
+    { "id": "sref_003", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Invoice No: INV-2024-8841", "char_start": 10, "char_end": 35, "hash": "abc003" },
+    { "id": "sref_004", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "Invoice No: INV-2024-8841, dated 2024-11-15", "char_start": 220, "char_end": 264, "hash": "abc004" },
+    { "id": "sref_005", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "TOTAL: $63,600.00", "char_start": 800, "char_end": 818, "hash": "abc005" },
+    { "id": "sref_006", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Date: 2024-11-15", "char_start": 30, "char_end": 46, "hash": "abc006" },
+    { "id": "sref_007", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "CRUSHED CORNER: Multiple cartons sustained crushed corner damage.", "char_start": 450, "char_end": 514, "hash": "abc007" },
+    { "id": "sref_008", "document_id": "doc_image", "kind": "vision_label", "page": null, "text": "crushed corner damage visible on pallet cartons", "hash": "abc008" },
+    { "id": "sref_009", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "WATER DAMAGE: Three cartons show clear water stain marks and wet packaging.", "char_start": 520, "char_end": 595, "hash": "abc009" },
+    { "id": "sref_010", "document_id": "doc_image", "kind": "vision_label", "page": null, "text": "water stains on lower cartons", "hash": "abc010" },
+    { "id": "sref_011", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "SHORTAGE: The delivered quantity was 487 units — 13 units are missing", "char_start": 600, "char_end": 668, "hash": "abc011" },
+    { "id": "sref_012", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Electronic Components  500  $120.00  $60,000.00", "char_start": 400, "char_end": 446, "hash": "abc012" }
+  ],
+  "explanations": [
+    {
+      "id": "expl_001",
+      "incident_id": "demo-incident-001",
+      "summary": "Incident involving shipment SHP-10488 with reported crushed corner and water damage — assessed as HIGH risk (82/100).",
+      "why": [
+        "Shipment ID SHP-10488 confirmed in both invoice (INV-2024-8841) and complaint email.",
+        "Damage types corroborated across text and vision: crushed corner, water damage.",
+        "3 high-confidence cross-document links established.",
+        "1 probable link requires manual review."
+      ],
+      "uncertainty": [
+        "Image analysis may not capture full extent of internal component damage.",
+        "Shortage count (13 units) based solely on complainant's statement — not independently verified."
+      ],
+      "recommended_action": "Escalate for immediate investigation — high damage severity and financial exposure of $63,600.",
+      "risk_score": 82,
+      "risk_label": "high"
+    }
+  ]
+}
