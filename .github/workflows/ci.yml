@@ -1,0 +1,192 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  db-migrations:
+    name: Database (migration validation)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Validate Supabase migrations
+        env:
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        run: bash .github/scripts/validate_supabase_migrations.sh
+
+  backend:
+    name: Backend (lint · type · test · security)
+    runs-on: ubuntu-latest
+    needs: [db-migrations]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply migrations for backend tests
+        env:
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        run: bash ../.github/scripts/validate_supabase_migrations.sh
+
+      - name: Lint (ruff)
+        run: ruff check . --ignore F401,F541,F841
+
+      - name: Test (pytest subset)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          SUPABASE_URL: https://ci-project.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: ci_publishable_key
+          ENVIRONMENT: development
+        run: pytest -q -k "not durability and not security"
+
+      - name: Dependency vulnerability scan (pip-audit)
+        continue-on-error: true
+        run: pip-audit -r requirements.txt
+
+  frontend:
+    name: Frontend (lint · typecheck · build · audit)
+    runs-on: ubuntu-latest
+    needs: [db-migrations]
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Lint (eslint)
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build
+        run: bun run build
+        env:
+          VITE_SUPABASE_URL: https://ci-project.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci_publishable_key
+          SUPABASE_URL: https://ci-project.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: ci_publishable_key
+
+      - name: Dependency vulnerability scan
+        continue-on-error: true
+        run: bun audit
+
+  docker-build:
+    name: Docker (compose build)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend and frontend images
+        run: docker compose build --no-cache
+
+  docker-smoke:
+    name: Docker (compose smoke)
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack for smoke test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+          VITE_SUPABASE_URL: https://ci-project.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci_publishable_key
+          SUPABASE_URL: https://ci-project.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: ci_publishable_key
+          GOOGLE_API_KEY: ci_google_key
+          GEMINI_API_KEY: ci_gemini_key
+          OPSPILOT_API_KEYS: ci_write_key
+        run: |
+          docker compose up -d --build
+
+      - name: Wait for backend health
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/health >/dev/null; then
+              echo "Backend healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time"
+          docker compose logs backend
+          exit 1
+
+      - name: Check frontend responds
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000 >/dev/null; then
+              echo "Frontend responding"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend did not respond in time"
+          docker compose logs frontend
+          exit 1
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

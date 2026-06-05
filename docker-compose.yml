@@ -1,0 +1,84 @@
+name: opspilot-ai
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: opspilot-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - opspilot-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: opspilot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Set to "production" to make missing auth keys a fatal startup error.
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/postgres}
+      SUPABASE_URL: ${SUPABASE_URL:-https://local-project.supabase.co}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:-local_publishable_key}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      STORAGE_ROOT: /app/data
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      OPSPILOT_API_KEYS: ${OPSPILOT_API_KEYS:-}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-15728640}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-30}
+      ENABLE_DOCLING_PARSER: ${ENABLE_DOCLING_PARSER:-false}
+    volumes:
+      - opspilot-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: opspilot-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # --- Client-side (bundled into browser output, safe to be public) ---
+      VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-}
+      # Browser uses the host-accessible URL for graph polling (reads, no auth).
+      VITE_OPSPILOT_API_URL: ${VITE_OPSPILOT_API_URL:-http://localhost:8000}
+      # --- Server-side only (used by TanStack Start server functions) ---
+      # These are NOT prefixed with VITE_ and are never bundled into the browser.
+      SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+      SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      # Backend URL for server→server calls (container internal network).
+      OPSPILOT_API_URL: http://backend:8000
+      # Write API key — server-only secret, never expose in VITE_ variables.
+      OPSPILOT_API_KEY: ${OPSPILOT_API_KEYS:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  opspilot-data:
+  opspilot-pgdata:
