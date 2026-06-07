@@ -10,13 +10,12 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from app.database import get_engine
-from app.models import Job, JobEvent, JobStatus, STAGE_PROGRESS, EvidenceGraph
+from app.models import Job, JobEvent, JobStatus, EvidenceGraph
 from app.storage import write_incident_json
 from app.security import require_api_key
 

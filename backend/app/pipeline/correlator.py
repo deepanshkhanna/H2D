@@ -54,7 +54,6 @@ def score_links(
     """
     entities: list[dict] = canonical.get("canonical", [])
     source_refs: list[dict] = canonical.get("source_refs", [])
-    doc_ids: dict[str, str] = canonical.get("doc_ids", {})
 
     edges: list[dict] = []
 
@@ -179,7 +178,7 @@ def _score_edge(
             "decision": decision,
             "components": components,
             "weights": WEIGHTS,
-            "calibration_note": f"Deterministic scoring; model adjudication not applied" if components["model_adjudication_score"] == 0 else "",
+            "calibration_note": "Deterministic scoring; model adjudication not applied" if components["model_adjudication_score"] == 0 else "",
         },
         "metadata": {"incident_id": incident_id},
     }

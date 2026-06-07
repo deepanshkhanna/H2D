@@ -4,7 +4,6 @@ Files are stored as: {storage_root}/uploads/{sha256[:2]}/{sha256}/{original_name
 """
 
 import hashlib
-import shutil
 from pathlib import Path
 
 from app.config import settings

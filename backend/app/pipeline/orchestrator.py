@@ -13,7 +13,6 @@ import json
 import logging
 import traceback
 from datetime import datetime, timezone
-from pathlib import Path
 
 from sqlmodel import Session, select
 

@@ -5,7 +5,6 @@ Prevents duplicate API calls for identical inputs during demo.
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 

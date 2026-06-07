@@ -51,7 +51,6 @@ async def analyze_damage_image(path: str, incident_id: str) -> dict[str, Any]:
         return result
 
     try:
-        import google.generativeai as genai
         client = _get_client()
         img_part = {"mime_type": _guess_mime(path), "data": image_bytes}
         prompt = (
