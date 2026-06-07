@@ -14,7 +14,9 @@ export default defineConfig({
     // Force-enable Nitro deploy support and target Vercel so the build emits
     // a Vercel-compatible server bundle (adapter/preset handled by Nitro).
     // Passing `nitro: true` would also enable it; here we explicitly set the
-    // Vercel preset so Vercel routes are correctly produced.
-    nitro: { preset: "vercel" },
+    // Cloudflare is the default Nitro target for this config; enable the
+    // Nitro preset for Cloudflare Workers so the build emits a Cloudflare
+    // compatible server bundle.
+    nitro: { preset: "cloudflare" },
   },
 });
