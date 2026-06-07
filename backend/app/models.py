@@ -12,7 +12,8 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
-from sqlmodel import Column, Field as SMField, SQLModel, Text
+from sqlalchemy import Column, DateTime, func
+from sqlmodel import Field as SMField, SQLModel, Text
 
 
 # ─── Enums ────────────────────────────────────────────────────────────────────
@@ -107,8 +108,14 @@ class Job(SQLModel, table=True):
     stage: str = SMField(default=JobStatus.queued)
     progress: int = SMField(default=0)
     error: Optional[str] = None
-    created_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = SMField(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
+    )
+    updated_at: datetime = SMField(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False, onupdate=func.now()),
+    )
 
 
 class JobEvent(SQLModel, table=True):
@@ -119,7 +126,10 @@ class JobEvent(SQLModel, table=True):
     stage: str
     message: str
     payload_json: Optional[str] = SMField(default=None, sa_column=Column(Text))
-    created_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = SMField(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
+    )
 
 
 class IncidentArtifact(SQLModel, table=True):
@@ -145,7 +155,7 @@ class JobEventResponse(BaseModel):
     stage: str
     message: str
     payload: Optional[dict[str, Any]] = None
-    created_at: str
+    created_at: datetime
 
 
 class JobResponse(BaseModel):
@@ -156,8 +166,8 @@ class JobResponse(BaseModel):
     progress: int
     error: Optional[str] = None
     events: list[JobEventResponse] = Field(default_factory=list)
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class CreateIncidentResponse(BaseModel):
