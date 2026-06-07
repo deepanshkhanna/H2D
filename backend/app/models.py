@@ -122,6 +122,21 @@ class JobEvent(SQLModel, table=True):
     created_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
+class IncidentArtifact(SQLModel, table=True):
+    __tablename__ = "incident_artifacts"
+
+    id: str = SMField(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    incident_id: str = SMField(index=True)
+    job_id: Optional[str] = SMField(default=None, index=True)
+    artifact_kind: str = SMField(default="input")
+    role: str = SMField(index=True)
+    sha256: str = SMField(index=True)
+    storage_backend: str = SMField(default="local")
+    storage_path: str
+    metadata_json: Optional[str] = SMField(default=None, sa_column=Column(Text))
+    created_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
 # ─── Pydantic response models ─────────────────────────────────────────────────
 
 class JobEventResponse(BaseModel):

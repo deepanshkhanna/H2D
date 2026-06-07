@@ -20,6 +20,18 @@ class Settings(BaseSettings):
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
     @property
+    def api_keys_list(self) -> list[str]:
+        return [k.strip() for k in self.opspilot_api_keys.split(",") if k.strip()]
+
+    @property
+    def auth_enabled(self) -> bool:
+        return len(self.api_keys_list) > 0
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.strip().lower() == "production"
+
+    @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 

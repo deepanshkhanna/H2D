@@ -2,6 +2,8 @@
 Async pipeline orchestrator.
 Each stage is awaited in sequence; if any stage fails the job is marked
 failed and the error is persisted. Each stage emits an event.
+Stages that call external APIs are wrapped with timeout controls to prevent
+indefinite hangs and DoS scenarios.
 """
 
 from __future__ import annotations
@@ -13,13 +15,68 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.database import get_engine
-from app.models import Job, JobEvent, JobStatus, STAGE_PROGRESS
+from app.models import IncidentArtifact, Job, JobEvent, JobStatus, STAGE_PROGRESS
 from app.storage import write_incident_json
 
 logger = logging.getLogger(__name__)
+
+# Stage timeouts (seconds) — external API calls have longer timeouts
+TIMEOUT_EXTERNAL_API = 60  # Gemini image analysis
+TIMEOUT_LOCAL_PARSE = 30   # PDF/email parsing
+TIMEOUT_DB_OPERATION = 10  # Database operations
+
+
+def enqueue_pipeline(job_id: str, incident_id: str, stored_files: dict[str, tuple[str, str]]) -> None:
+    """Schedule async pipeline execution when an event loop is available."""
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(run_pipeline(job_id, incident_id, stored_files))
+    except RuntimeError:
+        # Recovery/tests may run without a live loop; caller can monkeypatch this.
+        return
+
+
+def recover_unfinished_jobs() -> int:
+    """Re-queue unfinished jobs by reconstructing stored file references from artifacts."""
+    resumed = 0
+    with Session(get_engine()) as session:
+        pending = session.exec(
+            select(Job).where(Job.status.notin_([JobStatus.completed, JobStatus.failed]))
+        ).all()
+
+        for job in pending:
+            artifacts = session.exec(
+                select(IncidentArtifact).where(IncidentArtifact.job_id == job.id)
+            ).all()
+
+            stored_files: dict[str, tuple[str, str]] = {}
+            for art in artifacts:
+                if art.role and art.sha256 and art.storage_path:
+                    stored_files[art.role] = (art.sha256, art.storage_path)
+
+            job.status = JobStatus.queued
+            job.stage = JobStatus.queued
+            job.progress = STAGE_PROGRESS[JobStatus.queued]
+            job.updated_at = datetime.now(timezone.utc).isoformat()
+            session.add(job)
+            session.add(
+                JobEvent(
+                    job_id=job.id,
+                    stage=JobStatus.queued,
+                    message="Recovered job after restart",
+                    payload_json=json.dumps({"recovered_roles": list(stored_files.keys())}),
+                )
+            )
+
+            enqueue_pipeline(job.id, job.incident_id, stored_files)
+            resumed += 1
+
+        session.commit()
+
+    return resumed
 
 
 # ─── DB helpers (sync, called inside async via run_in_executor) ────────────────
@@ -116,7 +173,15 @@ async def run_pipeline(
         if "damage_image" in stored_files:
             _, path = stored_files["damage_image"]
             from app.ai import gemini
-            result = await gemini.analyze_damage_image(path, incident_id)
+            try:
+                result = await asyncio.wait_for(
+                    asyncio.get_event_loop().run_in_executor(
+                        None, gemini.analyze_damage_image, path, incident_id
+                    ),
+                    timeout=TIMEOUT_EXTERNAL_API
+                )
+            except asyncio.TimeoutError:
+                raise RuntimeError(f"Image analysis timed out after {TIMEOUT_EXTERNAL_API}s")
             parsed["damage_image"] = result
             _advance_job(job_id, JobStatus.image_analyzed,
                          f"Image analyzed: {len(result.get('labels', []))} damage labels detected")

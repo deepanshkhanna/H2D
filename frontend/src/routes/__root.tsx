@@ -18,7 +18,9 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Case · 404</h1>
+        <h1 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          Case · 404
+        </h1>
         <h2 className="mt-4 text-2xl font-semibold text-foreground">No evidence at this address</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
@@ -140,7 +142,9 @@ function AuthSync() {
   const router = useRouter();
   const queryClient = useQueryClient();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
       router.invalidate();
       queryClient.invalidateQueries();
     });

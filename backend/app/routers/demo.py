@@ -12,12 +12,13 @@ import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from app.database import get_engine
 from app.models import Job, JobEvent, JobStatus, STAGE_PROGRESS, EvidenceGraph
 from app.storage import write_incident_json
+from app.security import require_api_key
 
 router = APIRouter(prefix="/api/demo", tags=["demo"])
 
@@ -32,10 +33,11 @@ def get_demo_graph():
 
 
 @router.post("/load")
-def load_demo() -> dict:
+def load_demo(_: None = Depends(require_api_key)) -> dict:
     """
     Instantiate the demo as a completed job so the normal polling UI
     picks it up. Returns {job_id, incident_id}.
+    Requires API key.
     """
     incident_id = "demo-incident-001"
     job_id = str(uuid.uuid4())

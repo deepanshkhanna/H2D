@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Grain, Mono, ConfidenceLabel, MoneyExposure, EvidenceChip, StatusPill, SectionLabel } from "@/components/forensic/primitives";
+import {
+  Grain,
+  Mono,
+  ConfidenceLabel,
+  MoneyExposure,
+  EvidenceChip,
+  StatusPill,
+  SectionLabel,
+} from "@/components/forensic/primitives";
 import { InvestigationWall } from "@/components/forensic/InvestigationWall";
 import { strengthForConfidence, shortHash } from "@/lib/strength";
 
@@ -46,15 +54,27 @@ function Nav() {
           <span className="font-medium tracking-tight">OpsPilot</span>
         </Link>
         <div className="hidden md:flex gap-7 text-sm text-muted-foreground">
-          <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="#evidence" className="hover:text-foreground transition-colors">Evidence</a>
-          <a href="#console" className="hover:text-foreground transition-colors">Console</a>
+          <a href="#how" className="hover:text-foreground transition-colors">
+            How it works
+          </a>
+          <a href="#evidence" className="hover:text-foreground transition-colors">
+            Evidence
+          </a>
+          <a href="#console" className="hover:text-foreground transition-colors">
+            Console
+          </a>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5">
+          <Link
+            to="/demo"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
+          >
             Live Demo
           </Link>
-          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5">
+          <Link
+            to="/login"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
+          >
             Sign in
           </Link>
           <Link
@@ -83,8 +103,8 @@ function Hero() {
             Find what everyone <span className="text-muted-foreground/70">else missed.</span>
           </h1>
           <p className="mt-6 max-w-md text-base text-muted-foreground leading-relaxed text-pretty">
-            OpsPilot AI reconstructs operational incidents from invoices, emails, manifests, and photos.
-            Every conclusion includes evidence.
+            OpsPilot AI reconstructs operational incidents from invoices, emails, manifests, and
+            photos. Every conclusion includes evidence.
           </p>
           <div className="mt-8 flex items-center gap-3">
             <Link
@@ -102,9 +122,16 @@ function Hero() {
             </a>
           </div>
           <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-foreground/60" /> Inspectable reasoning</span>
-            <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-foreground/60" /> Source provenance on every claim</span>
-            <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-foreground/60" /> Financial exposure surfaced</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-1 rounded-full bg-foreground/60" /> Inspectable reasoning
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-1 rounded-full bg-foreground/60" /> Source provenance on every
+              claim
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-1 rounded-full bg-foreground/60" /> Financial exposure surfaced
+            </span>
           </div>
         </div>
         <div className="relative">
@@ -127,14 +154,24 @@ function SampleCase() {
             Evidence assembled, not alerts surfaced.
           </h2>
           <p className="mt-5 max-w-md text-sm text-muted-foreground leading-relaxed">
-            OpsPilot delivers the conclusion first — root cause, money at risk, recommended action — and
-            keeps the entire chain of proof one click away. Every claim cites the file, line, or
+            OpsPilot delivers the conclusion first — root cause, money at risk, recommended action —
+            and keeps the entire chain of proof one click away. Every claim cites the file, line, or
             timestamp it came from.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-muted-foreground">
-            <li className="flex items-start gap-3"><span className="mt-1.5 size-1 rounded-full bg-primary" />Confidence shown as both a number and a word: strong, confirmed, likely, weak.</li>
-            <li className="flex items-start gap-3"><span className="mt-1.5 size-1 rounded-full bg-primary" />Anything below 70% routes to <span className="text-foreground">Needs Human Review</span>.</li>
-            <li className="flex items-start gap-3"><span className="mt-1.5 size-1 rounded-full bg-primary" />Every conclusion footers with model, UTC time, and input hash.</li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1 rounded-full bg-primary" />
+              Confidence shown as both a number and a word: strong, confirmed, likely, weak.
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1 rounded-full bg-primary" />
+              Anything below 70% routes to{" "}
+              <span className="text-foreground">Needs Human Review</span>.
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1.5 size-1 rounded-full bg-primary" />
+              Every conclusion footers with model, UTC time, and input hash.
+            </li>
           </ul>
         </div>
 
@@ -142,7 +179,9 @@ function SampleCase() {
           <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
             <div className="flex items-center gap-3">
               <StatusPill status="review_needed" />
-              <span className="font-mono text-[11px] text-muted-foreground">CASE-4402 · SHP-10488</span>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                CASE-4402 · SHP-10488
+              </span>
             </div>
             <ConfidenceLabel confidence={confidence} label={strength} compact />
           </div>
@@ -161,16 +200,17 @@ function SampleCase() {
               <div>
                 <Mono>Root Cause</Mono>
                 <p className="mt-2 text-sm text-foreground/90 leading-relaxed">
-                  Invoice INV-9204 billed 42 units; complaint from buyer@acme.co reports 29 received.
-                  Dock camera at 02:14 UTC shows a partial pallet on the loading bay floor matching the
-                  shortfall.
+                  Invoice INV-9204 billed 42 units; complaint from buyer@acme.co reports 29
+                  received. Dock camera at 02:14 UTC shows a partial pallet on the loading bay floor
+                  matching the shortfall.
                 </p>
               </div>
               <div>
                 <Mono>Reasoning</Mono>
                 <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
                   Shipment ID SHP-10488 appears in all three sources. Quantity discrepancy (42 → 29)
-                  matches the visual evidence and the complaint timestamp aligns with the dock event window.
+                  matches the visual evidence and the complaint timestamp aligns with the dock event
+                  window.
                 </p>
               </div>
               <div>
@@ -195,7 +235,9 @@ function SampleCase() {
           </div>
 
           <div className="px-6 py-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground bg-background/40">
-            <span>Generated using <span className="text-foreground/80">Gemini 3 Flash</span></span>
+            <span>
+              Generated using <span className="text-foreground/80">Gemini 3 Flash</span>
+            </span>
             <span>14:03 UTC</span>
             <span>Hash {shortHash("6F8D2A1B")}</span>
             <span>Sources: Invoice · Complaint · Photo · Manifest</span>
@@ -237,16 +279,27 @@ function ConsolePreview() {
             <div className="grid h-full grid-cols-[240px_1fr_280px] grid-rows-[auto_1fr_56px]">
               <div className="col-span-3 flex items-center gap-3 border-b border-border/40 px-4 py-2.5">
                 <StatusPill status="correlating" />
-                <span className="font-mono text-[10px] text-muted-foreground">CASE-4402 · 13-unit shortage</span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  CASE-4402 · 13-unit shortage
+                </span>
                 <div className="ml-auto flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-warning" />
-                  2 need review
+                  <span className="size-1.5 rounded-full bg-warning" />2 need review
                 </div>
               </div>
               <div className="border-r border-border/40 p-3 space-y-2">
                 <Mono>Evidence Sources</Mono>
-                {["Invoice · INV-9204", "Email · complaint", "Photo · dock_cam_03", "Manifest · BL-44821"].map((s) => (
-                  <div key={s} className="rounded-md bg-background/60 ring-1 ring-border/40 px-2.5 py-2 text-[11px] text-foreground/80">{s}</div>
+                {[
+                  "Invoice · INV-9204",
+                  "Email · complaint",
+                  "Photo · dock_cam_03",
+                  "Manifest · BL-44821",
+                ].map((s) => (
+                  <div
+                    key={s}
+                    className="rounded-md bg-background/60 ring-1 ring-border/40 px-2.5 py-2 text-[11px] text-foreground/80"
+                  >
+                    {s}
+                  </div>
                 ))}
               </div>
               <div className="relative p-4">
@@ -257,7 +310,9 @@ function ConsolePreview() {
                       <span className="size-1.5 rounded-full bg-destructive" />
                       High Risk
                     </div>
-                    <div className="text-[13px] font-medium text-foreground">13-unit shortage · SHP-10488</div>
+                    <div className="text-[13px] font-medium text-foreground">
+                      13-unit shortage · SHP-10488
+                    </div>
                     <div className="mt-2 flex items-baseline gap-4 text-[11px] font-mono">
                       <span className="text-primary">94% Confirmed</span>
                       <span className="text-foreground/80">$63,600</span>
@@ -268,11 +323,15 @@ function ConsolePreview() {
               <div className="border-l border-border/40 p-3 space-y-3">
                 <Mono>Case Conclusions</Mono>
                 <div className="rounded-md bg-background/60 ring-1 ring-primary/30 p-2.5">
-                  <div className="text-[11px] font-medium text-foreground leading-snug">13-unit shortage</div>
+                  <div className="text-[11px] font-medium text-foreground leading-snug">
+                    13-unit shortage
+                  </div>
                   <div className="mt-1 font-mono text-[10px] text-primary">94% · $63,600</div>
                 </div>
                 <div className="rounded-md bg-background/60 ring-1 ring-warning/30 p-2.5">
-                  <div className="text-[11px] font-medium text-foreground leading-snug">Carrier docking mismatch</div>
+                  <div className="text-[11px] font-medium text-foreground leading-snug">
+                    Carrier docking mismatch
+                  </div>
                   <div className="mt-1 font-mono text-[10px] text-warning">76% · $4,200</div>
                 </div>
               </div>
@@ -309,13 +368,27 @@ function Trust() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-border/40 rounded-xl overflow-hidden ring-1 ring-border/40">
           {[
-            { k: "01", t: "Upload Evidence", d: "Invoices, emails, manifests, inspection reports, damage photos." },
-            { k: "02", t: "Extract Entities", d: "Shipment IDs, amounts, vendors, timestamps, parties." },
+            {
+              k: "01",
+              t: "Upload Evidence",
+              d: "Invoices, emails, manifests, inspection reports, damage photos.",
+            },
+            {
+              k: "02",
+              t: "Extract Entities",
+              d: "Shipment IDs, amounts, vendors, timestamps, parties.",
+            },
             { k: "03", t: "Correlate", d: "Match across sources to surface the actual story." },
-            { k: "04", t: "Conclude with Proof", d: "Conclusions cite every file they're built on." },
+            {
+              k: "04",
+              t: "Conclude with Proof",
+              d: "Conclusions cite every file they're built on.",
+            },
           ].map((s) => (
             <div key={s.k} className="bg-background p-6">
-              <div className="font-mono text-[10px] text-primary uppercase tracking-[0.18em]">{s.k}</div>
+              <div className="font-mono text-[10px] text-primary uppercase tracking-[0.18em]">
+                {s.k}
+              </div>
               <div className="mt-3 text-[15px] font-medium text-foreground">{s.t}</div>
               <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">{s.d}</p>
             </div>
@@ -337,9 +410,15 @@ function Footer() {
           <span>Evidence Correlation Engine</span>
         </div>
         <div className="flex gap-6 text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-          <a href="#" className="hover:text-foreground">Security</a>
-          <a href="#" className="hover:text-foreground">Privacy</a>
-          <a href="#" className="hover:text-foreground">Audit</a>
+          <a href="#" className="hover:text-foreground">
+            Security
+          </a>
+          <a href="#" className="hover:text-foreground">
+            Privacy
+          </a>
+          <a href="#" className="hover:text-foreground">
+            Audit
+          </a>
         </div>
       </div>
     </footer>

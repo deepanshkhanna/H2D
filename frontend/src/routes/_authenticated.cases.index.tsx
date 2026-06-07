@@ -52,7 +52,13 @@ function CasesIndex() {
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (title.trim()) { m.mutate(title.trim()); setTitle(""); } }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (title.trim()) {
+            m.mutate(title.trim());
+            setTitle("");
+          }
+        }}
         className="mb-8 flex gap-2 rounded-lg bg-surface ring-1 ring-border/60 p-2"
       >
         <input
@@ -72,7 +78,9 @@ function CasesIndex() {
       {cases.length === 0 ? (
         <div className="rounded-lg bg-surface ring-1 ring-border/40 p-12 text-center">
           <Mono>No cases yet</Mono>
-          <p className="mt-3 text-sm text-muted-foreground">Open a case above to begin an investigation.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Open a case above to begin an investigation.
+          </p>
         </div>
       ) : (
         <div className="rounded-lg bg-surface ring-1 ring-border/40 overflow-hidden divide-y divide-border/40">
@@ -87,7 +95,9 @@ function CasesIndex() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
                     <StatusPill status={c.status} />
-                    <span className="font-mono text-[10px] text-muted-foreground">{c.reference}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {c.reference}
+                    </span>
                   </div>
                   <div className="text-[15px] font-medium text-foreground truncate">{c.title}</div>
                 </div>

@@ -19,11 +19,16 @@ export const STRENGTH_COPY: Record<StrengthLabel, string> = {
 
 export function strengthToneClass(label: StrengthLabel) {
   switch (label) {
-    case "strong": return "text-success";
-    case "confirmed": return "text-primary";
-    case "likely": return "text-foreground";
-    case "weak": return "text-warning";
-    case "unverified": return "text-muted-foreground";
+    case "strong":
+      return "text-success";
+    case "confirmed":
+      return "text-primary";
+    case "likely":
+      return "text-foreground";
+    case "weak":
+      return "text-warning";
+    case "unverified":
+      return "text-muted-foreground";
   }
 }
 
@@ -52,11 +57,17 @@ export const STATUS_LABEL: Record<string, string> = {
 
 export function statusTone(status: string) {
   switch (status) {
-    case "investigating": return "bg-muted/40 text-muted-foreground ring-border";
-    case "correlating": return "bg-primary/10 text-primary ring-primary/30";
-    case "review_needed": return "bg-warning/10 text-warning ring-warning/30";
-    case "confirmed": return "bg-success/10 text-success ring-success/30";
-    case "resolved": return "bg-muted/30 text-muted-foreground ring-border";
-    default: return "bg-muted/40 text-muted-foreground ring-border";
+    case "investigating":
+      return "bg-muted/40 text-muted-foreground ring-border";
+    case "correlating":
+      return "bg-primary/10 text-primary ring-primary/30";
+    case "review_needed":
+      return "bg-warning/10 text-warning ring-warning/30";
+    case "confirmed":
+      return "bg-success/10 text-success ring-success/30";
+    case "resolved":
+      return "bg-muted/30 text-muted-foreground ring-border";
+    default:
+      return "bg-muted/40 text-muted-foreground ring-border";
   }
 }

@@ -15,7 +15,12 @@ export function Grain({ className }: { className?: string }) {
 
 export function Mono({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <span className={cn("font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground", className)}>
+    <span
+      className={cn(
+        "font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground",
+        className,
+      )}
+    >
       {children}
     </span>
   );
@@ -49,10 +54,22 @@ export function ConfidenceLabel({
   return (
     <div className={cn("flex flex-col", compact ? "gap-0.5" : "gap-1.5")}>
       <div className="flex items-baseline gap-2">
-        <span className={cn(compact ? "text-base" : "text-2xl", "font-semibold tabular-nums", strengthToneClass(label))}>
+        <span
+          className={cn(
+            compact ? "text-base" : "text-2xl",
+            "font-semibold tabular-nums",
+            strengthToneClass(label),
+          )}
+        >
           {pct}%
         </span>
-        <span className={cn("text-[11px] uppercase tracking-[0.16em]", strengthToneClass(label), "opacity-80")}>
+        <span
+          className={cn(
+            "text-[11px] uppercase tracking-[0.16em]",
+            strengthToneClass(label),
+            "opacity-80",
+          )}
+        >
           {STRENGTH_COPY[label]}
         </span>
       </div>
@@ -60,7 +77,13 @@ export function ConfidenceLabel({
         <div
           className={cn(
             "h-full transition-all",
-            label === "strong" || label === "confirmed" ? "bg-primary" : label === "likely" ? "bg-foreground/60" : label === "weak" ? "bg-warning" : "bg-muted-foreground",
+            label === "strong" || label === "confirmed"
+              ? "bg-primary"
+              : label === "likely"
+                ? "bg-foreground/60"
+                : label === "weak"
+                  ? "bg-warning"
+                  : "bg-muted-foreground",
           )}
           style={{ width: `${pct}%` }}
         />
@@ -97,7 +120,13 @@ export function EvidenceChip({
   tone?: "neutral" | "warning" | "danger" | "primary";
 }) {
   const toneClass =
-    tone === "warning" ? "bg-warning" : tone === "danger" ? "bg-destructive" : tone === "primary" ? "bg-primary" : "bg-foreground/40";
+    tone === "warning"
+      ? "bg-warning"
+      : tone === "danger"
+        ? "bg-destructive"
+        : tone === "primary"
+          ? "bg-primary"
+          : "bg-foreground/40";
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-surface ring-1 ring-border/60 px-2.5 py-1 text-[11px] text-foreground/80">
       <span className={cn("size-1.5 rounded-full", toneClass)} />

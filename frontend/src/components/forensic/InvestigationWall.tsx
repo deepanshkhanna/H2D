@@ -28,7 +28,10 @@ export function InvestigationWall() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: [0, -4, 0] }}
-        transition={{ opacity: { duration: 0.6 }, y: { duration: 10, repeat: Infinity, ease: "easeInOut" } }}
+        transition={{
+          opacity: { duration: 0.6 },
+          y: { duration: 10, repeat: Infinity, ease: "easeInOut" },
+        }}
         className="absolute top-[10%] left-[6%] w-56 rotate-[-1.2deg] rounded-sm bg-surface ring-1 ring-border/70 shadow-2xl p-3.5"
       >
         <Mono>Invoice · INV-9204.pdf</Mono>
@@ -47,13 +50,24 @@ export function InvestigationWall() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: [0, 3, 0] }}
-        transition={{ opacity: { duration: 0.6, delay: 0.15 }, y: { duration: 12, repeat: Infinity, ease: "easeInOut" } }}
+        transition={{
+          opacity: { duration: 0.6, delay: 0.15 },
+          y: { duration: 12, repeat: Infinity, ease: "easeInOut" },
+        }}
         className="absolute top-[36%] left-[24%] w-60 rotate-[1.4deg] rounded-sm bg-surface ring-1 ring-border/70 shadow-2xl p-3.5"
       >
         <Mono>Manifest · BL-44821</Mono>
         <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-mono text-foreground/70">
-          <div><span className="text-muted-foreground">Carrier</span><br/>NorthRail XJ-9</div>
-          <div><span className="text-muted-foreground">Docked</span><br/>14:48 UTC</div>
+          <div>
+            <span className="text-muted-foreground">Carrier</span>
+            <br />
+            NorthRail XJ-9
+          </div>
+          <div>
+            <span className="text-muted-foreground">Docked</span>
+            <br />
+            14:48 UTC
+          </div>
         </div>
         <div className="mt-2.5 space-y-1">
           <div className="h-1 w-full bg-border/60 rounded" />
@@ -94,7 +108,10 @@ export function InvestigationWall() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: [0, -3, 0] }}
-        transition={{ opacity: { duration: 0.6, delay: 0.3 }, y: { duration: 11, repeat: Infinity, ease: "easeInOut" } }}
+        transition={{
+          opacity: { duration: 0.6, delay: 0.3 },
+          y: { duration: 11, repeat: Infinity, ease: "easeInOut" },
+        }}
         className="absolute bottom-[8%] left-[14%] w-56 rotate-[0.6deg] rounded-sm bg-surface ring-1 ring-warning/30 shadow-2xl p-3.5"
       >
         <div className="flex items-center justify-between">
@@ -111,13 +128,18 @@ export function InvestigationWall() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: [0, 3, 0] }}
-        transition={{ opacity: { duration: 0.6, delay: 0.45 }, y: { duration: 13, repeat: Infinity, ease: "easeInOut" } }}
+        transition={{
+          opacity: { duration: 0.6, delay: 0.45 },
+          y: { duration: 13, repeat: Infinity, ease: "easeInOut" },
+        }}
         className="absolute bottom-[12%] right-[6%] w-48 rotate-[-0.8deg] rounded-sm bg-surface ring-1 ring-border/70 shadow-2xl p-3"
       >
         <Mono>Photo · dock_cam_03</Mono>
         <div className="mt-2 aspect-video w-full rounded-sm bg-gradient-to-br from-zinc-800 via-zinc-900 to-black ring-1 ring-black/30 relative overflow-hidden">
           <div className="absolute inset-0 dot-grid opacity-30" />
-          <div className="absolute bottom-1 left-1 font-mono text-[8px] text-foreground/40">02:14 UTC</div>
+          <div className="absolute bottom-1 left-1 font-mono text-[8px] text-foreground/40">
+            02:14 UTC
+          </div>
         </div>
         <div className="mt-2 flex flex-wrap gap-1">
           <EvidenceChip label="damage" tone="warning" />

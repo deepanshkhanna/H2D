@@ -35,7 +35,7 @@ OpsPilot focuses on one core outcome:
 - `.github/` CI/CD workflows and migration validation scripts.
 - `backend/` API, pipeline, security, storage, tests.
 - `frontend/` web application and Supabase migrations.
-- `Docs/` consolidated engineering and product documentation.
+- `docs/` consolidated engineering and product documentation.
 - `docker-compose.yml` local/staging stack.
 
 ## Quick start
@@ -71,11 +71,11 @@ docker compose build
 
 ## Documentation
 
-- `Docs/architecture.md`
-- `Docs/deployment.md`
-- `Docs/security.md`
-- `Docs/development.md`
-- `Docs/roadmap.md`
+- `docs/architecture.md`
+- `docs/deployment.md`
+- `docs/security.md`
+- `docs/development.md`
+- `docs/roadmap.md`
 
 ## Status
 

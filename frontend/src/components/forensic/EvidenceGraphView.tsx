@@ -9,20 +9,9 @@
  */
 
 import { useMemo } from "react";
-import type {
-  EvidenceGraph,
-  EvidenceNode,
-  EvidenceEdge,
-  NodeType,
-} from "@/lib/api/opspilot";
+import type { EvidenceGraph, EvidenceNode, EvidenceEdge, NodeType } from "@/lib/api/opspilot";
 
-const COLUMN_ORDER: NodeType[] = [
-  "document",
-  "entity",
-  "observation",
-  "anomaly",
-  "risk",
-];
+const COLUMN_ORDER: NodeType[] = ["document", "entity", "observation", "anomaly", "risk"];
 
 const TYPE_COLOR: Record<NodeType, string> = {
   document: "#3b82f6",
@@ -45,7 +34,11 @@ interface Placed {
   y: number;
 }
 
-function layout(nodes: EvidenceNode[]): { placed: Map<string, Placed>; width: number; height: number } {
+function layout(nodes: EvidenceNode[]): {
+  placed: Map<string, Placed>;
+  width: number;
+  height: number;
+} {
   const columns = new Map<NodeType, EvidenceNode[]>();
   for (const t of COLUMN_ORDER) columns.set(t, []);
   for (const n of nodes) {

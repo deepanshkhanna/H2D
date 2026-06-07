@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output } from "ai";
+import type { LanguageModel } from "ai";
 import { createHash } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createGeminiProvider } from "./ai-gateway";
@@ -51,9 +52,17 @@ export const getCase = createServerFn({ method: "GET" })
     const [caseQ, evidenceQ, conclusionsQ, eventsQ, linksQ] = await Promise.all([
       supabase.from("cases").select("*").eq("id", data.id).single(),
       supabase.from("evidence").select("*").eq("case_id", data.id).order("uploaded_at"),
-      supabase.from("conclusions").select("*").eq("case_id", data.id).order("is_primary", { ascending: false }).order("confidence", { ascending: false }),
+      supabase
+        .from("conclusions")
+        .select("*")
+        .eq("case_id", data.id)
+        .order("is_primary", { ascending: false })
+        .order("confidence", { ascending: false }),
       supabase.from("case_events").select("*").eq("case_id", data.id).order("occurred_at"),
-      supabase.from("conclusion_evidence").select("*").eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? ""),
+      supabase
+        .from("conclusion_evidence")
+        .select("*")
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? ""),
     ]);
     if (caseQ.error) throw new Error(caseQ.error.message);
     return {
@@ -67,14 +76,23 @@ export const getCase = createServerFn({ method: "GET" })
 
 export const uploadEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { caseId: string; filename: string; kind: string; contentBase64: string; mimeType: string }) =>
-    z.object({
-      caseId: z.string().uuid(),
-      filename: z.string().min(1).max(255),
-      kind: z.enum(["invoice", "email", "manifest", "inspection", "photo", "other"]),
-      contentBase64: z.string().min(1),
-      mimeType: z.string().min(1).max(255),
-    }).parse(d),
+  .inputValidator(
+    (d: {
+      caseId: string;
+      filename: string;
+      kind: string;
+      contentBase64: string;
+      mimeType: string;
+    }) =>
+      z
+        .object({
+          caseId: z.string().uuid(),
+          filename: z.string().min(1).max(255),
+          kind: z.enum(["invoice", "email", "manifest", "inspection", "photo", "other"]),
+          contentBase64: z.string().min(1),
+          mimeType: z.string().min(1).max(255),
+        })
+        .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -91,15 +109,23 @@ export const uploadEvidence = createServerFn({ method: "POST" })
     const { data: ev, error: insErr } = await supabase
       .from("evidence")
       .insert({
-        case_id: data.caseId, user_id: userId, kind: data.kind as any,
-        filename: data.filename, storage_path: path, mime_type: data.mimeType,
-        status: "uploaded", input_hash: hash,
+        case_id: data.caseId,
+        user_id: userId,
+        kind: data.kind as any,
+        filename: data.filename,
+        storage_path: path,
+        mime_type: data.mimeType,
+        status: "uploaded",
+        input_hash: hash,
       })
-      .select("*").single();
+      .select("*")
+      .single();
     if (insErr) throw new Error(insErr.message);
 
     await supabase.from("case_events").insert({
-      case_id: data.caseId, user_id: userId, kind: "evidence_uploaded",
+      case_id: data.caseId,
+      user_id: userId,
+      kind: "evidence_uploaded",
       title: `${data.kind} uploaded · ${data.filename}`,
       payload: { evidence_id: ev.id },
     });
@@ -109,11 +135,15 @@ export const uploadEvidence = createServerFn({ method: "POST" })
 
 const ExtractionSchema = z.object({
   summary: z.string(),
-  entities: z.array(z.object({
-    type: z.string(),
-    value: z.string(),
-    confidence: z.number().min(0).max(100),
-  })).max(40),
+  entities: z
+    .array(
+      z.object({
+        type: z.string(),
+        value: z.string(),
+        confidence: z.number().min(0).max(100),
+      }),
+    )
+    .max(40),
 });
 
 export const extractEvidence = createServerFn({ method: "POST" })
@@ -123,7 +153,11 @@ export const extractEvidence = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: ev, error } = await supabase.from("evidence").select("*").eq("id", data.evidenceId).single();
+    const { data: ev, error } = await supabase
+      .from("evidence")
+      .select("*")
+      .eq("id", data.evidenceId)
+      .single();
     if (error || !ev) throw new Error(error?.message ?? "Evidence not found");
 
     await supabase.from("evidence").update({ status: "extracting" }).eq("id", ev.id);
@@ -133,7 +167,11 @@ export const extractEvidence = createServerFn({ method: "POST" })
     if (file) {
       const ab = await file.arrayBuffer();
       const buf = Buffer.from(ab);
-      if (ev.mime_type?.startsWith("text/") || ev.mime_type?.includes("json") || ev.filename.match(/\.(txt|csv|md|json|eml)$/i)) {
+      if (
+        ev.mime_type?.startsWith("text/") ||
+        ev.mime_type?.includes("json") ||
+        ev.filename.match(/\.(txt|csv|md|json|eml)$/i)
+      ) {
         textContent = buf.toString("utf-8").slice(0, 30000);
       } else {
         textContent = `[binary ${ev.mime_type ?? "file"} · ${buf.byteLength} bytes · filename ${ev.filename}]`;
@@ -141,7 +179,7 @@ export const extractEvidence = createServerFn({ method: "POST" })
     }
 
     const provider = createGeminiProvider();
-    const model = provider(MODEL);
+    const model = provider(MODEL) as unknown as LanguageModel;
 
     let extracted: z.infer<typeof ExtractionSchema> = { summary: "", entities: [] };
     try {
@@ -166,21 +204,32 @@ ${textContent}`,
       throw new Error("AI extraction failed: " + (e as Error).message);
     }
 
-    await supabase.from("evidence").update({
-      status: "extracted",
-      extracted_json: extracted as any,
-      summary: extracted.summary,
-    }).eq("id", ev.id);
+    await supabase
+      .from("evidence")
+      .update({
+        status: "extracted",
+        extracted_json: extracted as any,
+        summary: extracted.summary,
+      })
+      .eq("id", ev.id);
 
     if (extracted.entities.length) {
-      await supabase.from("entities").insert(extracted.entities.map((e) => ({
-        case_id: ev.case_id, user_id: userId, source_evidence_id: ev.id,
-        type: e.type, value: e.value, confidence: e.confidence,
-      })));
+      await supabase.from("entities").insert(
+        extracted.entities.map((e) => ({
+          case_id: ev.case_id,
+          user_id: userId,
+          source_evidence_id: ev.id,
+          type: e.type,
+          value: e.value,
+          confidence: e.confidence,
+        })),
+      );
     }
 
     await supabase.from("case_events").insert({
-      case_id: ev.case_id, user_id: userId, kind: "entity_extracted",
+      case_id: ev.case_id,
+      user_id: userId,
+      kind: "entity_extracted",
       title: `Extracted ${extracted.entities.length} entities from ${ev.filename}`,
       payload: { evidence_id: ev.id, count: extracted.entities.length },
     });
@@ -189,16 +238,20 @@ ${textContent}`,
   });
 
 const ConclusionsSchema = z.object({
-  conclusions: z.array(z.object({
-    title: z.string().max(120),
-    severity: z.enum(["low", "medium", "high", "critical"]),
-    root_cause: z.string(),
-    reasoning: z.string(),
-    confidence: z.number().min(0).max(100),
-    financial_exposure_usd: z.number().min(0),
-    recommended_action: z.string().max(200),
-    evidence_filenames: z.array(z.string()),
-  })).max(5),
+  conclusions: z
+    .array(
+      z.object({
+        title: z.string().max(120),
+        severity: z.enum(["low", "medium", "high", "critical"]),
+        root_cause: z.string(),
+        reasoning: z.string(),
+        confidence: z.number().min(0).max(100),
+        financial_exposure_usd: z.number().min(0),
+        recommended_action: z.string().max(200),
+        evidence_filenames: z.array(z.string()),
+      }),
+    )
+    .max(5),
 });
 
 export const correlate = createServerFn({ method: "POST" })
@@ -210,16 +263,28 @@ export const correlate = createServerFn({ method: "POST" })
     const { data: ents } = await supabase.from("entities").select("*").eq("case_id", data.caseId);
     if (!ev || ev.length < 1) throw new Error("Need at least 1 piece of evidence");
 
-    await supabase.from("cases").update({ status: "correlating", updated_at: new Date().toISOString() }).eq("id", data.caseId);
+    await supabase
+      .from("cases")
+      .update({ status: "correlating", updated_at: new Date().toISOString() })
+      .eq("id", data.caseId);
 
-    const inputHash = createHash("sha256").update(JSON.stringify({ ev: ev.map((x) => x.input_hash), ents })).digest("hex");
+    const inputHash = createHash("sha256")
+      .update(JSON.stringify({ ev: ev.map((x) => x.input_hash), ents }))
+      .digest("hex");
     const runAt = new Date().toISOString();
 
-    const evidenceSummaries = ev.map((e) => `- [${e.kind}] ${e.filename}: ${e.summary ?? "(no summary)"}`).join("\n");
-    const entitiesGrouped = (ents ?? []).map((e) => `  - ${e.type}: ${e.value} (from ${ev.find((x) => x.id === e.source_evidence_id)?.filename}, conf ${e.confidence})`).join("\n");
+    const evidenceSummaries = ev
+      .map((e) => `- [${e.kind}] ${e.filename}: ${e.summary ?? "(no summary)"}`)
+      .join("\n");
+    const entitiesGrouped = (ents ?? [])
+      .map(
+        (e) =>
+          `  - ${e.type}: ${e.value} (from ${ev.find((x) => x.id === e.source_evidence_id)?.filename}, conf ${e.confidence})`,
+      )
+      .join("\n");
 
     const provider = createGeminiProvider();
-    const model = provider(MODEL);
+    const model = provider(MODEL) as unknown as LanguageModel;
 
     const { output } = await generateText({
       model,
@@ -252,15 +317,27 @@ Return 1-3 conclusions ranked by importance. Be specific. Financial exposure sho
       if (order[c.severity] > order[topSeverity]) topSeverity = c.severity;
       totalExposure += Math.round(c.financial_exposure_usd * 100);
 
-      const { data: cRow, error: cErr } = await supabase.from("conclusions").insert({
-        case_id: data.caseId, user_id: userId,
-        title: c.title, severity: c.severity, root_cause: c.root_cause,
-        reasoning: c.reasoning, confidence: c.confidence, strength_label: strength,
-        financial_exposure_cents: Math.round(c.financial_exposure_usd * 100),
-        recommended_action: c.recommended_action,
-        needs_human_review: reviewFlag, is_primary: primary,
-        model_name: MODEL, model_run_at: runAt, input_hash: inputHash,
-      }).select("id").single();
+      const { data: cRow, error: cErr } = await supabase
+        .from("conclusions")
+        .insert({
+          case_id: data.caseId,
+          user_id: userId,
+          title: c.title,
+          severity: c.severity,
+          root_cause: c.root_cause,
+          reasoning: c.reasoning,
+          confidence: c.confidence,
+          strength_label: strength,
+          financial_exposure_cents: Math.round(c.financial_exposure_usd * 100),
+          recommended_action: c.recommended_action,
+          needs_human_review: reviewFlag,
+          is_primary: primary,
+          model_name: MODEL,
+          model_run_at: runAt,
+          input_hash: inputHash,
+        })
+        .select("id")
+        .single();
       if (cErr) throw new Error(cErr.message);
 
       const links = c.evidence_filenames
@@ -273,18 +350,38 @@ Return 1-3 conclusions ranked by importance. Be specific. Financial exposure sho
     }
 
     const newStatus = needsReview ? "review_needed" : "confirmed";
-    await supabase.from("cases").update({
-      status: newStatus as any, severity: topSeverity as any,
-      financial_exposure_cents: totalExposure, updated_at: new Date().toISOString(),
-    }).eq("id", data.caseId);
+    await supabase
+      .from("cases")
+      .update({
+        status: newStatus as any,
+        severity: topSeverity as any,
+        financial_exposure_cents: totalExposure,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.caseId);
 
     await supabase.from("case_events").insert([
-      { case_id: data.caseId, user_id: userId, kind: "correlation_found", title: `Correlation complete · ${output.conclusions.length} conclusion(s)`, payload: { count: output.conclusions.length } },
+      {
+        case_id: data.caseId,
+        user_id: userId,
+        kind: "correlation_found",
+        title: `Correlation complete · ${output.conclusions.length} conclusion(s)`,
+        payload: { count: output.conclusions.length },
+      },
       ...output.conclusions.map((c) => ({
-        case_id: data.caseId, user_id: userId, kind: "conclusion_generated" as const,
-        title: c.title, payload: { confidence: c.confidence, exposure_usd: c.financial_exposure_usd },
+        case_id: data.caseId,
+        user_id: userId,
+        kind: "conclusion_generated" as const,
+        title: c.title,
+        payload: { confidence: c.confidence, exposure_usd: c.financial_exposure_usd },
       })),
-      { case_id: data.caseId, user_id: userId, kind: "status_changed", title: `Status → ${newStatus}`, payload: { from: "correlating", to: newStatus } },
+      {
+        case_id: data.caseId,
+        user_id: userId,
+        kind: "status_changed",
+        title: `Status → ${newStatus}`,
+        payload: { from: "correlating", to: newStatus },
+      },
     ]);
 
     return { count: output.conclusions.length };
@@ -292,12 +389,20 @@ Return 1-3 conclusions ranked by importance. Be specific. Financial exposure sho
 
 export const signedEvidenceUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { evidenceId: string }) => z.object({ evidenceId: z.string().uuid() }).parse(d))
+  .inputValidator((d: { evidenceId: string }) =>
+    z.object({ evidenceId: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { data: ev } = await supabase.from("evidence").select("storage_path").eq("id", data.evidenceId).single();
+    const { data: ev } = await supabase
+      .from("evidence")
+      .select("storage_path")
+      .eq("id", data.evidenceId)
+      .single();
     if (!ev) throw new Error("not found");
-    const { data: s, error } = await supabase.storage.from("evidence").createSignedUrl(ev.storage_path, 300);
+    const { data: s, error } = await supabase.storage
+      .from("evidence")
+      .createSignedUrl(ev.storage_path, 300);
     if (error) throw new Error(error.message);
     return { url: s.signedUrl };
   });

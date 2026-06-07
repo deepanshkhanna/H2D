@@ -2,7 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mono, StatusPill, MoneyExposure, ConfidenceLabel, EvidenceChip, SectionLabel,
+  Mono,
+  StatusPill,
+  MoneyExposure,
+  ConfidenceLabel,
+  EvidenceChip,
+  SectionLabel,
 } from "@/components/forensic/primitives";
 import { strengthForConfidence, shortHash } from "@/lib/strength";
 
@@ -10,7 +15,10 @@ export const Route = createFileRoute("/demo")({
   head: () => ({
     meta: [
       { title: "Demo Case — OpsPilot AI" },
-      { name: "description", content: "Live walkthrough of OpsPilot AI evidence correlation on case SHP-10488." },
+      {
+        name: "description",
+        content: "Live walkthrough of OpsPilot AI evidence correlation on case SHP-10488.",
+      },
     ],
   }),
   component: DemoPage,
@@ -36,7 +44,8 @@ const DEMO_EVIDENCE = [
     filename: "invoice_SHP-10488.txt",
     mime_type: "text/plain",
     status: "extracted",
-    summary: "Invoice for 42 units of SKU-884-X @ $1,500 each. Total: $63,000. Shipped via NorthRail XJ-9 on 2026-05-26. PO-9204. Origin: Chicago IL, Destination: Mumbai IN.",
+    summary:
+      "Invoice for 42 units of SKU-884-X @ $1,500 each. Total: $63,000. Shipped via NorthRail XJ-9 on 2026-05-26. PO-9204. Origin: Chicago IL, Destination: Mumbai IN.",
     uploaded_at: "2026-05-28T09:14:22Z",
   },
   {
@@ -46,7 +55,8 @@ const DEMO_EVIDENCE = [
     filename: "complaint_email_SHP-10488.eml",
     mime_type: "message/rfc822",
     status: "extracted",
-    summary: "Buyer complaint: only 29 units received against PO of 42. Claims 13 units missing. References BL-44821. Requests urgent investigation and credit note. Sent by buyer@acme.co to ops@vendor.co.",
+    summary:
+      "Buyer complaint: only 29 units received against PO of 42. Claims 13 units missing. References BL-44821. Requests urgent investigation and credit note. Sent by buyer@acme.co to ops@vendor.co.",
     uploaded_at: "2026-05-28T09:17:05Z",
   },
   {
@@ -56,7 +66,8 @@ const DEMO_EVIDENCE = [
     filename: "dock_cam_03_2026-05-26.jpg",
     mime_type: "image/jpeg",
     status: "extracted",
-    summary: "Dock camera image shows 3 pallets unloaded at 02:14 UTC. Visible damage on corner pallet. Forklift operator present. Bay 7, NorthRail XJ-9 docking slot.",
+    summary:
+      "Dock camera image shows 3 pallets unloaded at 02:14 UTC. Visible damage on corner pallet. Forklift operator present. Bay 7, NorthRail XJ-9 docking slot.",
     uploaded_at: "2026-05-28T09:20:44Z",
   },
 ];
@@ -66,12 +77,15 @@ const DEMO_CONCLUSIONS = [
     id: "con-001",
     title: "13-unit shortage confirmed across invoice and complaint",
     severity: "high",
-    root_cause: "Invoice records 42 units dispatched (PO-9204). Buyer receipt confirms only 29 delivered — a discrepancy of exactly 13 units valued at $19,500. The dock photo corroborates a reduced pallet count at destination.",
-    reasoning: "Three independent evidence sources — the invoice, the complaint email, and the dock camera image — all converge on the same 13-unit figure. The invoice hash chain verifies no post-dispatch alteration. BL-44821 manifest cross-reference has not yet been obtained, which is the main uncertainty flagging this for human review.",
+    root_cause:
+      "Invoice records 42 units dispatched (PO-9204). Buyer receipt confirms only 29 delivered — a discrepancy of exactly 13 units valued at $19,500. The dock photo corroborates a reduced pallet count at destination.",
+    reasoning:
+      "Three independent evidence sources — the invoice, the complaint email, and the dock camera image — all converge on the same 13-unit figure. The invoice hash chain verifies no post-dispatch alteration. BL-44821 manifest cross-reference has not yet been obtained, which is the main uncertainty flagging this for human review.",
     confidence: 94,
     strength_label: "strong",
     financial_exposure_cents: 6360000,
-    recommended_action: "Issue credit note for $19,500 immediately; request BL-44821 from NorthRail within 24 h",
+    recommended_action:
+      "Issue credit note for $19,500 immediately; request BL-44821 from NorthRail within 24 h",
     needs_human_review: true,
     is_primary: true,
     model_name: "gemini-1.5-flash",
@@ -82,8 +96,10 @@ const DEMO_CONCLUSIONS = [
     id: "con-002",
     title: "Potential damage to corner pallet — insurance trigger",
     severity: "medium",
-    root_cause: "Dock photo shows visible damage on one corner pallet consistent with forklift impact. Combined with a shortage claim, this may constitute a carrier liability event under transit insurance clause 14-B.",
-    reasoning: "Image analysis identified structural deformation on the outermost pallet at bay 7. The NorthRail XJ-9 docking record time-aligns with the complaint email timeline within a 2-hour window, supporting the damage-in-transit hypothesis.",
+    root_cause:
+      "Dock photo shows visible damage on one corner pallet consistent with forklift impact. Combined with a shortage claim, this may constitute a carrier liability event under transit insurance clause 14-B.",
+    reasoning:
+      "Image analysis identified structural deformation on the outermost pallet at bay 7. The NorthRail XJ-9 docking record time-aligns with the complaint email timeline within a 2-hour window, supporting the damage-in-transit hypothesis.",
     confidence: 78,
     strength_label: "likely",
     financial_exposure_cents: 2400000,
@@ -105,16 +121,66 @@ const DEMO_LINKS = [
 ];
 
 const DEMO_EVENTS = [
-  { id: "evt-001", kind: "evidence_uploaded", title: "invoice · invoice_SHP-10488.txt", occurred_at: "2026-05-28T09:14:22Z" },
-  { id: "evt-002", kind: "entity_extracted", title: "Extracted 9 entities from invoice_SHP-10488.txt", occurred_at: "2026-05-28T09:14:55Z" },
-  { id: "evt-003", kind: "evidence_uploaded", title: "email · complaint_email_SHP-10488.eml", occurred_at: "2026-05-28T09:17:05Z" },
-  { id: "evt-004", kind: "entity_extracted", title: "Extracted 7 entities from complaint_email_SHP-10488.eml", occurred_at: "2026-05-28T09:17:31Z" },
-  { id: "evt-005", kind: "evidence_uploaded", title: "photo · dock_cam_03_2026-05-26.jpg", occurred_at: "2026-05-28T09:20:44Z" },
-  { id: "evt-006", kind: "entity_extracted", title: "Extracted 5 entities from dock_cam_03_2026-05-26.jpg", occurred_at: "2026-05-28T09:21:02Z" },
-  { id: "evt-007", kind: "correlation_found", title: "Correlation complete · 2 conclusion(s)", occurred_at: "2026-05-28T09:25:11Z" },
-  { id: "evt-008", kind: "conclusion_generated", title: "13-unit shortage confirmed across invoice and complaint", occurred_at: "2026-05-28T09:25:11Z" },
-  { id: "evt-009", kind: "conclusion_generated", title: "Potential damage to corner pallet — insurance trigger", occurred_at: "2026-05-28T09:25:12Z" },
-  { id: "evt-010", kind: "status_changed", title: "Status → review_needed", occurred_at: "2026-05-28T09:25:13Z" },
+  {
+    id: "evt-001",
+    kind: "evidence_uploaded",
+    title: "invoice · invoice_SHP-10488.txt",
+    occurred_at: "2026-05-28T09:14:22Z",
+  },
+  {
+    id: "evt-002",
+    kind: "entity_extracted",
+    title: "Extracted 9 entities from invoice_SHP-10488.txt",
+    occurred_at: "2026-05-28T09:14:55Z",
+  },
+  {
+    id: "evt-003",
+    kind: "evidence_uploaded",
+    title: "email · complaint_email_SHP-10488.eml",
+    occurred_at: "2026-05-28T09:17:05Z",
+  },
+  {
+    id: "evt-004",
+    kind: "entity_extracted",
+    title: "Extracted 7 entities from complaint_email_SHP-10488.eml",
+    occurred_at: "2026-05-28T09:17:31Z",
+  },
+  {
+    id: "evt-005",
+    kind: "evidence_uploaded",
+    title: "photo · dock_cam_03_2026-05-26.jpg",
+    occurred_at: "2026-05-28T09:20:44Z",
+  },
+  {
+    id: "evt-006",
+    kind: "entity_extracted",
+    title: "Extracted 5 entities from dock_cam_03_2026-05-26.jpg",
+    occurred_at: "2026-05-28T09:21:02Z",
+  },
+  {
+    id: "evt-007",
+    kind: "correlation_found",
+    title: "Correlation complete · 2 conclusion(s)",
+    occurred_at: "2026-05-28T09:25:11Z",
+  },
+  {
+    id: "evt-008",
+    kind: "conclusion_generated",
+    title: "13-unit shortage confirmed across invoice and complaint",
+    occurred_at: "2026-05-28T09:25:11Z",
+  },
+  {
+    id: "evt-009",
+    kind: "conclusion_generated",
+    title: "Potential damage to corner pallet — insurance trigger",
+    occurred_at: "2026-05-28T09:25:12Z",
+  },
+  {
+    id: "evt-010",
+    kind: "status_changed",
+    title: "Status → review_needed",
+    occurred_at: "2026-05-28T09:25:13Z",
+  },
 ];
 
 const DEMO_ENTITIES = [
@@ -156,14 +222,21 @@ function DemoPage() {
           <Link to="/" className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-primary shadow-[0_0_12px_oklch(0.62_0.18_258_/_0.6)]" />
             <span className="font-medium tracking-tight">OpsPilot</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Demo</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">
+              Demo
+            </span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/30 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
               Live Demo
             </div>
-            <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors">Open Console →</Link>
+            <Link
+              to="/login"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Open Console →
+            </Link>
           </div>
         </div>
       </header>
@@ -174,8 +247,8 @@ function DemoPage() {
           <StatusPill status={DEMO_CASE.status} />
           <span className="font-mono text-[11px] text-muted-foreground">{DEMO_CASE.reference}</span>
           <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-warning/10 text-warning ring-1 ring-warning/30 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em]">
-            <span className="size-1.5 rounded-full bg-warning animate-pulse" />
-            1 conclusion needs review
+            <span className="size-1.5 rounded-full bg-warning animate-pulse" />1 conclusion needs
+            review
           </span>
         </div>
         <h1 className="text-2xl md:text-3xl font-medium tracking-tight mb-8">{DEMO_CASE.title}</h1>
@@ -194,7 +267,12 @@ function DemoPage() {
         </div>
 
         {tab === "case" ? (
-          <CaseView primary={primary} others={others} evById={evById} linksByConclusion={linksByConclusion} />
+          <CaseView
+            primary={primary}
+            others={others}
+            evById={evById}
+            linksByConclusion={linksByConclusion}
+          />
         ) : (
           <EntitiesView />
         )}
@@ -221,7 +299,9 @@ function CaseView({ primary, others, evById, linksByConclusion }: any) {
         <aside className="space-y-4">
           <SectionLabel>Evidence Sources</SectionLabel>
           <div className="space-y-1.5">
-            {DEMO_EVIDENCE.map((e) => <EvidenceRow key={e.id} ev={e} />)}
+            {DEMO_EVIDENCE.map((e) => (
+              <EvidenceRow key={e.id} ev={e} />
+            ))}
           </div>
         </aside>
 
@@ -232,7 +312,12 @@ function CaseView({ primary, others, evById, linksByConclusion }: any) {
               <SectionLabel>Other Case Conclusions</SectionLabel>
               <div className="space-y-3">
                 {others.map((c: any) => (
-                  <ConclusionCard key={c.id} conclusion={c} evIds={linksByConclusion.get(c.id) ?? []} evById={evById} />
+                  <ConclusionCard
+                    key={c.id}
+                    conclusion={c}
+                    evIds={linksByConclusion.get(c.id) ?? []}
+                    evById={evById}
+                  />
                 ))}
               </div>
             </section>
@@ -283,22 +368,43 @@ function EntitiesView() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/40 bg-background/40">
-              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Type</th>
-              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Value</th>
-              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Source</th>
-              <th className="text-right px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Conf.</th>
+              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Type
+              </th>
+              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Value
+              </th>
+              <th className="text-left px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Source
+              </th>
+              <th className="text-right px-5 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Conf.
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
             {DEMO_ENTITIES.map((e, i) => (
               <tr key={i} className="hover:bg-surface-2 transition-colors">
-                <td className="px-5 py-2.5 font-mono text-[11px] text-primary uppercase tracking-[0.1em]">{e.type.replace(/_/g, " ")}</td>
+                <td className="px-5 py-2.5 font-mono text-[11px] text-primary uppercase tracking-[0.1em]">
+                  {e.type.replace(/_/g, " ")}
+                </td>
                 <td className="px-5 py-2.5 text-[13px] text-foreground font-medium">{e.value}</td>
                 <td className="px-5 py-2.5">
-                  <EvidenceChip label={e.source} tone={e.source === "invoice" ? "primary" : e.source === "email" ? "warning" : "neutral"} />
+                  <EvidenceChip
+                    label={e.source}
+                    tone={
+                      e.source === "invoice"
+                        ? "primary"
+                        : e.source === "email"
+                          ? "warning"
+                          : "neutral"
+                    }
+                  />
                 </td>
                 <td className="px-5 py-2.5 text-right">
-                  <span className={`font-mono text-[12px] font-semibold ${e.confidence >= 90 ? "text-success" : e.confidence >= 75 ? "text-primary" : "text-warning"}`}>
+                  <span
+                    className={`font-mono text-[12px] font-semibold ${e.confidence >= 90 ? "text-success" : e.confidence >= 75 ? "text-primary" : "text-warning"}`}
+                  >
                     {e.confidence}%
                   </span>
                 </td>
@@ -358,7 +464,9 @@ function PrimaryConclusion({ conclusion: c, evIds, evById, caseRef }: any) {
               <div className="mt-2 flex flex-wrap gap-2">
                 {evIds.map((id: string) => {
                   const e = evById.get(id);
-                  return e ? <EvidenceChip key={id} label={`${e.kind} · ${e.filename}`} tone="primary" /> : null;
+                  return e ? (
+                    <EvidenceChip key={id} label={`${e.kind} · ${e.filename}`} tone="primary" />
+                  ) : null;
                 })}
               </div>
             </div>
@@ -411,7 +519,9 @@ function ConclusionCard({ conclusion: c, evIds, evById }: any) {
 function ProvenanceFooter({ c, caseRef }: { c: any; caseRef?: string }) {
   return (
     <div className="px-5 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-[10px] font-mono uppercase tracking-[0.14em] text-muted-foreground bg-background/40 border-t border-border/40">
-      <span>Generated using <span className="text-foreground/80">{c.model_name.split("/").pop()}</span></span>
+      <span>
+        Generated using <span className="text-foreground/80">{c.model_name.split("/").pop()}</span>
+      </span>
       <span>{new Date(c.model_run_at).toISOString().slice(11, 19)} UTC</span>
       <span>Hash {shortHash(c.input_hash)}</span>
       {caseRef && <span className="ml-auto">{caseRef}</span>}
@@ -420,15 +530,22 @@ function ProvenanceFooter({ c, caseRef }: { c: any; caseRef?: string }) {
 }
 
 function EvidenceRow({ ev }: { ev: any }) {
-  const tone = ev.status === "extracted" ? "bg-primary"
-    : ev.status === "extracting" ? "bg-warning animate-pulse"
-    : ev.status === "failed" ? "bg-destructive" : "bg-muted-foreground";
+  const tone =
+    ev.status === "extracted"
+      ? "bg-primary"
+      : ev.status === "extracting"
+        ? "bg-warning animate-pulse"
+        : ev.status === "failed"
+          ? "bg-destructive"
+          : "bg-muted-foreground";
   return (
     <div className="rounded-md bg-surface ring-1 ring-border/50 px-3 py-2 flex items-center gap-3">
       <span className={`size-1.5 rounded-full ${tone}`} />
       <div className="min-w-0 flex-1">
         <div className="text-[12px] text-foreground truncate">{ev.filename}</div>
-        <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.14em]">{ev.kind} · {ev.status}</div>
+        <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.14em]">
+          {ev.kind} · {ev.status}
+        </div>
       </div>
     </div>
   );
@@ -440,10 +557,15 @@ function DemoEvidenceGraph() {
     { id: "ev-002", x: 18, y: 70, kind: "email", linked: true },
     { id: "ev-003", x: 75, y: 20, kind: "photo", linked: true },
   ];
-  const cx = 50, cy = 50;
+  const cx = 50,
+    cy = 50;
   return (
     <div className="rounded-lg bg-surface ring-1 ring-border/40 dot-grid p-6 aspect-[2/1] relative overflow-hidden">
-      <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+      <svg
+        viewBox="0 0 100 100"
+        className="absolute inset-0 w-full h-full"
+        preserveAspectRatio="none"
+      >
         <defs>
           <linearGradient id="edge-gradient" x1="0" x2="1">
             <stop offset="0%" stopColor="transparent" />
@@ -453,11 +575,32 @@ function DemoEvidenceGraph() {
         </defs>
         {/* Secondary conclusion node */}
         <circle cx={78} cy={72} r={2.5} fill="oklch(0.45 0.10 258)" />
-        <line x1={78} y1={72} x2={18} y2={70} stroke="oklch(0.27 0.012 270)" strokeOpacity={0.35} strokeWidth={0.2} />
-        <line x1={78} y1={72} x2={75} y2={20} stroke="oklch(0.27 0.012 270)" strokeOpacity={0.35} strokeWidth={0.2} />
+        <line
+          x1={78}
+          y1={72}
+          x2={18}
+          y2={70}
+          stroke="oklch(0.27 0.012 270)"
+          strokeOpacity={0.35}
+          strokeWidth={0.2}
+        />
+        <line
+          x1={78}
+          y1={72}
+          x2={75}
+          y2={20}
+          stroke="oklch(0.27 0.012 270)"
+          strokeOpacity={0.35}
+          strokeWidth={0.2}
+        />
 
         {evPositions.map((e) => (
-          <line key={e.id} x1={cx} y1={cy} x2={e.x} y2={e.y}
+          <line
+            key={e.id}
+            x1={cx}
+            y1={cy}
+            x2={e.x}
+            y2={e.y}
             stroke={e.linked ? "oklch(0.62 0.18 258)" : "oklch(0.27 0.012 270)"}
             strokeOpacity={e.linked ? 0.5 : 0.35}
             strokeWidth={e.linked ? 0.35 : 0.2}
@@ -476,16 +619,24 @@ function DemoEvidenceGraph() {
 
       {/* Labels */}
       <div className="absolute" style={{ left: "7%", top: "18%" }}>
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">invoice</span>
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+          invoice
+        </span>
       </div>
       <div className="absolute" style={{ left: "5%", top: "64%" }}>
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">email</span>
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+          email
+        </span>
       </div>
       <div className="absolute" style={{ left: "68%", top: "13%" }}>
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">photo</span>
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+          photo
+        </span>
       </div>
       <div className="absolute" style={{ left: "44%", top: "44%" }}>
-        <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-primary opacity-80">primary</span>
+        <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-primary opacity-80">
+          primary
+        </span>
       </div>
 
       <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -520,7 +671,9 @@ function Playback({ events }: { events: typeof DEMO_EVENTS }) {
             onClick={() => setStep(0)}
             disabled={playing}
             className="rounded bg-surface-2 ring-1 ring-border/60 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] hover:bg-surface transition-colors disabled:opacity-40"
-          >Reset</button>
+          >
+            Reset
+          </button>
           <button
             onClick={play}
             disabled={playing}
@@ -541,8 +694,12 @@ function Playback({ events }: { events: typeof DEMO_EVENTS }) {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="relative py-1.5"
             >
-              <span className={`absolute -left-[18px] top-3 size-2 rounded-full ${i === step ? "bg-primary shadow-[0_0_10px_oklch(0.62_0.18_258_/_0.7)]" : "bg-foreground/30"}`} />
-              <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">{ev.kind.replace(/_/g, " ")}</div>
+              <span
+                className={`absolute -left-[18px] top-3 size-2 rounded-full ${i === step ? "bg-primary shadow-[0_0_10px_oklch(0.62_0.18_258_/_0.7)]" : "bg-foreground/30"}`}
+              />
+              <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+                {ev.kind.replace(/_/g, " ")}
+              </div>
               <div className="text-[13px] text-foreground/90">{ev.title}</div>
             </motion.li>
           ))}

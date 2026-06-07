@@ -1,6 +1,6 @@
 """
-GET /api/incidents/{incident_id}/graph  — full EvidenceGraph JSON
-GET /api/incidents/{incident_id}/audit  — same structure (audit metadata)
+GET /api/incidents/{incident_id}/graph  — full EvidenceGraph JSON (read-only, no auth)
+GET /api/incidents/{incident_id}/audit  — same structure (read-only, no auth)
 """
 
 from __future__ import annotations

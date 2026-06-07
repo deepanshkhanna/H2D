@@ -65,7 +65,9 @@ function LoginPage() {
         </h1>
         <form onSubmit={submit} className="mt-8 space-y-4">
           <div>
-            <label className="block text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Email</label>
+            <label className="block text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-1.5">
+              Email
+            </label>
             <input
               type="email"
               required
@@ -76,7 +78,9 @@ function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Password</label>
+            <label className="block text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-1.5">
+              Password
+            </label>
             <input
               type="password"
               required

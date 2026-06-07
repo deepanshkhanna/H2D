@@ -19,6 +19,10 @@ build/
 .env.*
 *.log
 
+# Runtime data and artifacts
+backend/data/
+frontend/dist/
+
 # OS / editor
 .DS_Store
 .vscode/

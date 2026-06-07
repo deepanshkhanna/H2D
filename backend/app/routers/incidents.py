@@ -20,6 +20,7 @@ from app.models import (
 )
 from app.storage import store_upload
 from app.pipeline import orchestrator
+from app.security import require_api_key
 
 router = APIRouter(prefix="/api/incidents", tags=["incidents"])
 
@@ -30,6 +31,7 @@ async def create_incident(
     complaint_email: Optional[UploadFile] = File(None),
     damage_image: Optional[UploadFile] = File(None),
     session: Session = Depends(get_session),
+    _: None = Depends(require_api_key),
 ):
     files_provided = [f for f in [invoice_pdf, complaint_email, damage_image] if f is not None]
     if not files_provided:

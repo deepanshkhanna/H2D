@@ -13,7 +13,9 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthLayout() {
   const navigate = useNavigate();
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!session) navigate({ to: "/login", replace: true });
     });
     return () => subscription.unsubscribe();
@@ -26,13 +28,27 @@ function AuthLayout() {
           <Link to="/cases" className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-primary shadow-[0_0_12px_oklch(0.62_0.18_258_/_0.6)]" />
             <span className="font-medium tracking-tight">OpsPilot</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">Console</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground ml-1">
+              Console
+            </span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
-            <Link to="/cases" className="text-muted-foreground hover:text-foreground transition-colors">Cases</Link>
-            <Link to="/demo" className="text-muted-foreground hover:text-foreground transition-colors">Demo</Link>
+            <Link
+              to="/cases"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cases
+            </Link>
+            <Link
+              to="/demo"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Demo
+            </Link>
             <button
-              onClick={async () => { await supabase.auth.signOut(); }}
+              onClick={async () => {
+                await supabase.auth.signOut();
+              }}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Sign out

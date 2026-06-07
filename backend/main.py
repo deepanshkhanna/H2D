@@ -20,10 +20,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def validate_production_config():
+    """Enforce required config in production mode."""
+    if not settings.is_production:
+        return
+    errors = []
+    if not settings.database_url:
+        errors.append("DATABASE_URL not set")
+    if not settings.supabase_url:
+        errors.append("SUPABASE_URL not set")
+    if not settings.supabase_service_role_key:
+        errors.append("SUPABASE_SERVICE_ROLE_KEY not set")
+    if not settings.gemini_api_key:
+        errors.append("GEMINI_API_KEY not set")
+    if not settings.api_keys_list:
+        errors.append("OPSPILOT_API_KEYS not set")
+    if errors:
+        raise RuntimeError(f"Production startup failed: {'; '.join(errors)}")
+    logger.info("Production config validation passed.")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    validate_production_config()
     create_tables()
+    # Recover any unfinished jobs from previous runs
+    from app.pipeline.orchestrator import recover_unfinished_jobs
+    recovered = recover_unfinished_jobs()
+    if recovered > 0:
+        logger.info("Recovered %d unfinished jobs from previous runs", recovered)
     logger.info("OpsPilot AI backend started. Storage: %s", settings.storage_root)
     yield
     # Shutdown

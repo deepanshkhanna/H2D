@@ -16,12 +16,7 @@
 
 // ── Evidence-graph contract (mirrors backend/app/models.py) ──────────────────
 
-export type NodeType =
-  | "document"
-  | "entity"
-  | "observation"
-  | "anomaly"
-  | "risk";
+export type NodeType = "document" | "entity" | "observation" | "anomaly" | "risk";
 
 export type EdgeType =
   | "contains"
@@ -141,5 +136,4 @@ export const opspilot = {
     const res = await fetch(`${BASE_URL}/api/jobs/${jobId}`, { signal });
     return handle<JobResponse>(res);
   },
-
 };
