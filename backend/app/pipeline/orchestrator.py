@@ -59,7 +59,7 @@ def recover_unfinished_jobs() -> int:
             job.status = JobStatus.queued
             job.stage = JobStatus.queued
             job.progress = STAGE_PROGRESS[JobStatus.queued]
-            job.updated_at = datetime.now(timezone.utc).isoformat()
+            job.updated_at = datetime.now(timezone.utc)
             session.add(job)
             session.add(
                 JobEvent(
@@ -88,7 +88,7 @@ def _advance_job(job_id: str, stage: JobStatus, message: str, payload: dict | No
         job.stage = stage
         job.status = stage
         job.progress = STAGE_PROGRESS[stage]
-        job.updated_at = datetime.now(timezone.utc).isoformat()
+        job.updated_at = datetime.now(timezone.utc)
         session.add(job)
 
         event = JobEvent(
@@ -109,7 +109,7 @@ def _fail_job(job_id: str, stage: JobStatus, error: str):
         job.status = JobStatus.failed
         job.stage = stage
         job.error = error[:2000]
-        job.updated_at = datetime.now(timezone.utc).isoformat()
+        job.updated_at = datetime.now(timezone.utc)
         session.add(job)
 
         event = JobEvent(

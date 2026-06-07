@@ -107,8 +107,8 @@ class Job(SQLModel, table=True):
     stage: str = SMField(default=JobStatus.queued)
     progress: int = SMField(default=0)
     error: Optional[str] = None
-    created_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class JobEvent(SQLModel, table=True):
@@ -119,7 +119,7 @@ class JobEvent(SQLModel, table=True):
     stage: str
     message: str
     payload_json: Optional[str] = SMField(default=None, sa_column=Column(Text))
-    created_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class IncidentArtifact(SQLModel, table=True):
@@ -134,7 +134,7 @@ class IncidentArtifact(SQLModel, table=True):
     storage_backend: str = SMField(default="local")
     storage_path: str
     metadata_json: Optional[str] = SMField(default=None, sa_column=Column(Text))
-    created_at: str = SMField(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: datetime = SMField(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ─── Pydantic response models ─────────────────────────────────────────────────
