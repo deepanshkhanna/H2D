@@ -64,6 +64,8 @@ def build_graph(
     links: dict[str, Any],
     risk_data: dict[str, Any],
     stored_files: list[tuple[str, str]],  # list of (sha256, path)
+    report_data: dict[str, Any] | None = None,
+    fin_data: dict[str, Any] | None = None,
 ) -> EvidenceGraph:
     nodes: list[EvidenceNode] = []
     edges: list[EvidenceEdge] = []
@@ -277,14 +279,109 @@ def build_graph(
         else "Archive incident — low risk, standard processing applies."
     )
 
+    # Compile supporting/conflicting evidence lists
+    supporting_ev = []
+    for sid in shipment_ids:
+        supporting_ev.append({
+            "title": "Shipment ID Match",
+            "value": f"Identifier {sid} matches across documents",
+            "confidence": 100,
+            "doc": "Invoice PDF, Complaint Email"
+        })
+    for dt in damage_types:
+        supporting_ev.append({
+            "title": "Damage Observation",
+            "value": f"Indicator for {dt.replace('_', ' ')} detected",
+            "confidence": 92,
+            "doc": "Damage Photo, Complaint Email"
+        })
+
+    conflicting_ev = []
+
+    # Compile recommendations list
+    recs = []
+    if risk_label == "high":
+        recs.append({
+            "action": "Initiate insurance claim",
+            "rationale": "High damage severity and financial exposure detected.",
+            "evidence_sources": ["Invoice PDF", "Complaint Email", "Damage Photo"]
+        })
+        recs.append({
+            "action": "Contact logistics provider",
+            "rationale": "Transit damage identified across multiple observation nodes.",
+            "evidence_sources": ["Damage Photo"]
+        })
+    elif risk_label == "medium":
+        recs.append({
+            "action": "Flag shipment for review",
+            "rationale": "Discrepancies identified requiring carrier validation.",
+            "evidence_sources": ["Invoice PDF", "Complaint Email"]
+        })
+    else:
+        recs.append({
+            "action": "Archive incident",
+            "rationale": "Low risk indicators and consistent shipping metadata.",
+            "evidence_sources": ["Invoice PDF"]
+        })
+
+    # Map report fields from report_data if present
+    exec_summary = None
+    timeline = []
+    consistency = []
+    contradictions = []
+    fin_impact = None
+    hypotheses = []
+    prioritized = []
+    narrative = None
+
+    if report_data:
+        exec_summary = report_data.get("executive_summary")
+        timeline = report_data.get("timeline_reconstruction", [])
+        consistency = report_data.get("evidence_consistency", [])
+        contradictions = report_data.get("contradiction_analysis", [])
+        fin_impact = report_data.get("financial_impact")
+        hypotheses = report_data.get("root_cause_hypotheses", [])
+        prioritized = report_data.get("prioritized_actions", [])
+        narrative = report_data.get("investigation_narrative")
+        
+        # Override fields to use LLM outputs if available
+        if prioritized:
+            recs = []
+            for p in prioritized:
+                src_list = p.get("evidence_ref", "")
+                if isinstance(src_list, str):
+                    sources = [x.strip() for x in src_list.split(",") if x.strip()]
+                elif isinstance(src_list, list):
+                    sources = src_list
+                else:
+                    sources = []
+                recs.append({
+                    "action": p.get("action", ""),
+                    "rationale": p.get("rationale", ""),
+                    "evidence_sources": sources
+                })
+
     explanation = Explanation(
         incident_id=incident_id,
-        summary=_build_summary(shipment_ids, damage_types, risk_score, risk_label),
+        summary=exec_summary if exec_summary else _build_summary(shipment_ids, damage_types, risk_score, risk_label),
         why=why_lines,
         uncertainty=uncertainty,
         recommended_action=recommended_action,
         risk_score=risk_score,
         risk_label=RiskLabel(risk_label),
+        supporting_evidence=supporting_ev,
+        conflicting_evidence=conflicting_ev,
+        recommendations=recs,
+        executive_summary=exec_summary,
+        timeline_reconstruction=timeline,
+        evidence_consistency=consistency,
+        contradiction_analysis=contradictions,
+        financial_impact=fin_impact,
+        root_cause_hypotheses=hypotheses,
+        prioritized_actions=prioritized,
+        investigation_narrative=narrative,
+        best_explanation=report_data.get("best_explanation") if report_data else None,
+        competing_hypotheses=report_data.get("competing_hypotheses", []) if report_data else []
     )
 
     # Attach explanation to most confident correlation edge

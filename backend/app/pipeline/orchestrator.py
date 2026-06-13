@@ -80,7 +80,9 @@ def recover_unfinished_jobs() -> int:
 
 # ─── DB helpers (sync, called inside async via run_in_executor) ────────────────
 
-def _advance_job(job_id: str, stage: JobStatus, message: str, payload: dict | None = None):
+import time
+
+def _advance_job(job_id: str, stage: JobStatus, message: str, payload: dict | None = None, duration_ms: float | None = None):
     with Session(get_engine()) as session:
         job = session.get(Job, job_id)
         if not job:
@@ -95,6 +97,7 @@ def _advance_job(job_id: str, stage: JobStatus, message: str, payload: dict | No
             job_id=job_id,
             stage=stage,
             message=message,
+            duration_ms=duration_ms,
             payload_json=json.dumps(payload) if payload else None,
         )
         session.add(event)
@@ -134,15 +137,15 @@ async def run_pipeline(
     """
     loop = asyncio.get_event_loop()
 
-    def advance(stage: JobStatus, msg: str, payload: dict | None = None):
-        loop.run_in_executor(None, _advance_job, job_id, stage, msg, payload)
+    def advance(stage: JobStatus, msg: str, payload: dict | None = None, duration_ms: float | None = None):
+        loop.run_in_executor(None, _advance_job, job_id, stage, msg, payload, duration_ms)
 
     def fail(stage: JobStatus, err: str):
         loop.run_in_executor(None, _fail_job, job_id, stage, err)
 
     try:
         # ── Stage 1: files stored ───────────────────────────────────────────
-        _advance_job(job_id, JobStatus.files_stored, f"Stored {len(stored_files)} file(s)", {"roles": list(stored_files.keys())})
+        _advance_job(job_id, JobStatus.files_stored, f"Stored {len(stored_files)} file(s)", {"roles": list(stored_files.keys())}, duration_ms=0.0)
         await asyncio.sleep(0.1)
 
         # ── Stage 2-4: parse documents ──────────────────────────────────────
@@ -151,83 +154,157 @@ async def run_pipeline(
         parsed: dict[str, dict] = {}
 
         if "invoice_pdf" in stored_files:
+            t_start = time.perf_counter()
             sha, path = stored_files["invoice_pdf"]
             result = await asyncio.get_event_loop().run_in_executor(
                 None, parsers.parse_pdf, path, incident_id
             )
             parsed["invoice_pdf"] = result
+            duration = (time.perf_counter() - t_start) * 1000.0
             _advance_job(job_id, JobStatus.invoice_parsed,
                          f"Invoice parsed: {result.get('page_count', '?')} pages, {len(result.get('text', ''))} chars",
-                         {"sha": sha})
+                         {"sha": sha}, duration_ms=duration)
 
         if "complaint_email" in stored_files:
+            t_start = time.perf_counter()
             _, path = stored_files["complaint_email"]
             result = await asyncio.get_event_loop().run_in_executor(
                 None, parsers.parse_email, path, incident_id
             )
             parsed["complaint_email"] = result
+            duration = (time.perf_counter() - t_start) * 1000.0
             _advance_job(job_id, JobStatus.email_parsed,
-                         f"Email parsed: subject='{result.get('subject', '')[:60]}'")
+                         f"Email parsed: subject='{result.get('subject', '')[:60]}'",
+                         duration_ms=duration)
 
         if "damage_image" in stored_files:
+            t_start = time.perf_counter()
             _, path = stored_files["damage_image"]
             from app.ai import gemini
             try:
                 result = await asyncio.wait_for(
-                    asyncio.get_event_loop().run_in_executor(
-                        None, gemini.analyze_damage_image, path, incident_id
-                    ),
+                    gemini.analyze_damage_image(path, incident_id),
                     timeout=TIMEOUT_EXTERNAL_API
                 )
             except asyncio.TimeoutError:
                 raise RuntimeError(f"Image analysis timed out after {TIMEOUT_EXTERNAL_API}s")
             parsed["damage_image"] = result
+            duration = (time.perf_counter() - t_start) * 1000.0
             _advance_job(job_id, JobStatus.image_analyzed,
-                         f"Image analyzed: {len(result.get('labels', []))} damage labels detected")
+                         f"Image analyzed: {len(result.get('labels', []))} damage labels detected",
+                         duration_ms=duration)
 
         # ── Stage 5: entity extraction ──────────────────────────────────────
+        t_start = time.perf_counter()
         from app.pipeline import extractor
         entities = await asyncio.get_event_loop().run_in_executor(
             None, extractor.extract_entities, parsed, incident_id
         )
+        duration = (time.perf_counter() - t_start) * 1000.0
         _advance_job(job_id, JobStatus.entities_extracted,
-                     f"Extracted {len(entities.get('mentions', []))} entity mentions",
-                     {"mention_count": len(entities.get("mentions", []))})
+                     f"Entities extracted across all documents",
+                     {"mention_count": len(entities.get("mentions", []))},
+                     duration_ms=duration)
 
         # ── Stage 6: entity normalization ───────────────────────────────────
+        t_start = time.perf_counter()
         from app.pipeline import normalizer
         canonical = await asyncio.get_event_loop().run_in_executor(
             None, normalizer.normalize_entities, entities, incident_id
         )
+        duration = (time.perf_counter() - t_start) * 1000.0
         _advance_job(job_id, JobStatus.entities_normalized,
-                     f"Normalized to {len(canonical.get('canonical', []))} canonical entities")
+                     f"Entities normalized and deduplicated",
+                     duration_ms=duration)
 
         # ── Stage 7: link scoring ────────────────────────────────────────────
+        t_start = time.perf_counter()
         from app.pipeline import correlator
         links = await asyncio.get_event_loop().run_in_executor(
             None, correlator.score_links, canonical, parsed, incident_id
         )
+        duration = (time.perf_counter() - t_start) * 1000.0
         _advance_job(job_id, JobStatus.links_scored,
-                     f"Scored {len(links.get('edges', []))} candidate links",
-                     {"confirmed": links.get("confirmed_count", 0)})
+                     f"Cross-document links scored",
+                     {"confirmed": links.get("confirmed_count", 0)},
+                     duration_ms=duration)
 
         # ── Stage 8: risk scoring ────────────────────────────────────────────
+        t_start = time.perf_counter()
         from app.pipeline import risk as risk_mod
         risk_data = await asyncio.get_event_loop().run_in_executor(
             None, risk_mod.score_risk, links, canonical, parsed, incident_id
         )
+        duration = (time.perf_counter() - t_start) * 1000.0
         _advance_job(job_id, JobStatus.risk_scored,
-                     f"Risk score: {risk_data.get('risk_score', 0):.0f}/100 ({risk_data.get('risk_label', 'unknown')})")
+                     f"Risk model calculated: {risk_data.get('risk_score', 0):.0f}/100 ({risk_data.get('risk_label', 'unknown')})",
+                     duration_ms=duration)
+
+        # Stage 8.5: financial calculation (dedicated engine)
+        from app.pipeline import financial as fin_mod
+        fin_data = fin_mod.compute_financials(parsed)
+        logger.info(
+            "Financial engine: billed=%d received=%d missing=%d damaged=%d loss=%.2f %s",
+            fin_data["billed_units"], fin_data["received_units"],
+            fin_data["missing_units"], fin_data["damaged_units"],
+            fin_data["estimated_loss"], fin_data["currency"],
+        )
 
         # ── Stage 9: graph construction ──────────────────────────────────────
+        t_start = time.perf_counter()
+        from app.ai import gemini
+        
+        evidence_summary_parts = []
+        for role, doc in parsed.items():
+            filename = str(doc.get("path", "")).split("\\")[-1].split("/")[-1]
+            evidence_summary_parts.append(
+                f"DOCUMENT: {role} (Filename: {filename})\n"
+                f"Content Text/Summary: {doc.get('text', doc.get('summary', ''))[:1500]}\n"
+            )
+        
+        canonical_list = canonical.get("canonical", [])
+        evidence_summary_parts.append("EXTRACTED ENTITIES:")
+        for ent in canonical_list:
+            evidence_summary_parts.append(
+                f"- {ent.get('label')} (Type: {ent.get('subtype')}, Confidence: {ent.get('confidence')})"
+            )
+        
+        evidence_summary_parts.append("CORRELATED CONNECTIONS:")
+        for edge in links.get("edges", []):
+            evidence_summary_parts.append(
+                f"- Source: {edge.get('source')} -> Target: {edge.get('target')} ({edge.get('type')}, Status: {edge.get('status')}, Confidence: {edge.get('confidence')})"
+            )
+            
+        evidence_summary_parts.append(
+            f"FINANCIAL ENGINE: billed={fin_data['billed_units']} "
+            f"received={fin_data['received_units']} "
+            f"missing={fin_data['missing_units']} damaged={fin_data['damaged_units']} "
+            f"unit_price={fin_data['unit_price']} "
+            f"estimated_loss={fin_data['currency']} {fin_data['estimated_loss']:.2f}"
+        )
+
+        evidence_summary_prompt = "\n".join(evidence_summary_parts)
+        
+        # Await report generation
+        report_data = await gemini.generate_investigation_report(
+            evidence_summary_prompt,
+            parsed=parsed,
+            canonical=canonical,
+            links=links,
+            risk_data=risk_data,
+            fin_data=fin_data,
+        )
+
         from app.pipeline import graph_builder
         graph = await asyncio.get_event_loop().run_in_executor(
             None, graph_builder.build_graph,
             job_id, incident_id, parsed, canonical, links, risk_data,
-            list(stored_files.values())
+            list(stored_files.values()), report_data, fin_data
         )
+        duration = (time.perf_counter() - t_start) * 1000.0
         _advance_job(job_id, JobStatus.graph_generated,
-                     f"Graph built: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+                     f"Evidence graph generated",
+                     duration_ms=duration)
 
         # ── Save graph JSON ──────────────────────────────────────────────────
         graph_json = graph.model_dump_json(indent=2)
@@ -235,7 +312,7 @@ async def run_pipeline(
         write_incident_json(incident_id, "audit.v1.json", graph_json)
 
         # ── Completed ────────────────────────────────────────────────────────
-        _advance_job(job_id, JobStatus.completed, "Pipeline completed successfully")
+        _advance_job(job_id, JobStatus.completed, "Investigation report generated successfully", duration_ms=0.0)
 
     except Exception as exc:
         tb = traceback.format_exc()

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCase, uploadEvidence, extractEvidence, correlate } from "@/lib/cases.functions";
+import { ExplainabilityDrawer } from "@/components/forensic/ExplainabilityDrawer";
 import {
   Mono,
   StatusPill,
@@ -86,6 +87,18 @@ function CaseDetail() {
     () => new Map((data.evidence as any[]).map((e) => [e.id, e])),
     [data.evidence],
   );
+
+  const [selectedConclusionId, setSelectedConclusionId] = useState<string | null>(null);
+  const selectedConclusion = useMemo(
+    () => data.conclusions.find((c: any) => c.id === selectedConclusionId),
+    [data.conclusions, selectedConclusionId],
+  );
+  const selectedEvidenceList = useMemo(() => {
+    if (!selectedConclusionId) return [];
+    return (linksByConclusion.get(selectedConclusionId) ?? [])
+      .map((id) => evById.get(id))
+      .filter(Boolean);
+  }, [selectedConclusionId, linksByConclusion, evById]);
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
@@ -171,6 +184,7 @@ function CaseDetail() {
                 evidence={data.evidence}
                 conclusions={data.conclusions}
                 links={data.links}
+                onNodeClick={(id: string) => setSelectedConclusionId(id)}
               />
             </section>
           )}
@@ -202,6 +216,13 @@ function CaseDetail() {
           )}
         </div>
       </div>
+
+      <ExplainabilityDrawer
+        isOpen={!!selectedConclusionId}
+        onOpenChange={(open: boolean) => !open && setSelectedConclusionId(null)}
+        conclusion={selectedConclusion}
+        evidenceList={selectedEvidenceList}
+      />
     </main>
   );
 }
@@ -400,7 +421,7 @@ function EmptyState({ evidenceCount, canCorrelate, onCorrelate, correlating }: a
   );
 }
 
-function EvidenceGraph({ evidence, conclusions, links }: any) {
+function EvidenceGraph({ evidence, conclusions, links, onNodeClick }: any) {
   // Calm SVG: evidence nodes around a primary conclusion node, edges from conclusion→evidence
   const primary = conclusions.find((c: any) => c.is_primary) ?? conclusions[0];
   const N = evidence.length;
@@ -431,16 +452,27 @@ function EvidenceGraph({ evidence, conclusions, links }: any) {
             y2={e.y}
             stroke={primaryLinks.has(e.id) ? "oklch(0.62 0.18 258)" : "oklch(0.27 0.012 270)"}
             strokeOpacity={primaryLinks.has(e.id) ? 0.5 : 0.35}
-            strokeWidth={primaryLinks.has(e.id) ? 0.3 : 0.2}
+            strokeWidth={primaryLinks.has(e.id) ? 0.8 : 0.4}
+            className="cursor-pointer transition-all hover:stroke-[oklch(0.62_0.18_258)] hover:stroke-opacity-80"
+            onClick={() => primary && onNodeClick(primary.id)}
           />
         ))}
-        {primary && <circle cx={cx} cy={cy} r={3} fill="oklch(0.62 0.18 258)" />}
+        {primary && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={4.5}
+            fill="oklch(0.62 0.18 258)"
+            className="cursor-pointer hover:fill-primary-foreground transition-colors hover:scale-110"
+            onClick={() => onNodeClick(primary.id)}
+          />
+        )}
         {evPos.map((e: any) => (
           <circle
             key={e.id}
             cx={e.x}
             cy={e.y}
-            r={1.8}
+            r={2.5}
             fill={primaryLinks.has(e.id) ? "oklch(0.97 0.005 270)" : "oklch(0.62 0.015 270)"}
           />
         ))}

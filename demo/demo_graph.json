@@ -3,10 +3,29 @@
     "incident_id": "demo-incident-001",
     "job_id": "demo-job-001",
     "graph_version": "v1",
-    "created_at": "2024-11-22T10:45:00Z",
+    "created_at": "2026-06-11T10:45:00Z",
     "input_hash": "abc123demo",
     "pipeline_versions": { "graph_builder": "1.0.0", "correlator": "1.0.0" },
-    "model_calls": []
+    "model_calls": [
+      {
+        "id": "mc_001",
+        "provider": "google",
+        "model": "gemini-1.5-flash",
+        "purpose": "vision_damage_analysis",
+        "prompt_hash": "a4f8e91",
+        "input_artifact_ids": ["doc_image"],
+        "created_at": "2026-06-11T10:45:10Z"
+      },
+      {
+        "id": "mc_002",
+        "provider": "google",
+        "model": "gemini-1.5-flash",
+        "purpose": "cross_document_correlation",
+        "prompt_hash": "c8b9d32",
+        "input_artifact_ids": ["doc_invoice", "doc_email", "doc_image"],
+        "created_at": "2026-06-11T10:45:20Z"
+      }
+    ]
   },
   "nodes": [
     {
@@ -35,7 +54,9 @@
       "data": {
         "document_type": "complaint_email",
         "filename": "complaint_email_SHP-10488.eml",
-        "parser": "email_module"
+        "parser": "email_module",
+        "sentiment": "Negative",
+        "severity": "High"
       }
     },
     {
@@ -49,7 +70,11 @@
       "data": {
         "document_type": "damage_image",
         "filename": "damage_photo.jpg",
-        "parser": "gemini_vision"
+        "parser": "gemini_vision",
+        "damage_detected": true,
+        "labels": ["crushed_corner", "water_damage"],
+        "severity": "high",
+        "confidence": 0.92
       }
     },
     {
@@ -98,11 +123,11 @@
       "id": "ent_date_invoice",
       "type": "entity",
       "subtype": "date",
-      "label": "2024-11-15",
+      "label": "2026-06-01",
       "confidence": 0.90,
       "source_ref_ids": ["sref_006"],
       "data": {
-        "normalized_value": "2024-11-15",
+        "normalized_value": "2026-06-01",
         "mention_count": 1,
         "document_roles": ["invoice_pdf"],
         "cross_doc": false
@@ -160,13 +185,13 @@
       "id": "risk_demo",
       "type": "risk",
       "label": "HIGH RISK",
-      "description": "Composite risk score: 82/100",
+      "description": "Composite risk score: 87/100",
       "confidence": 1.0,
       "data": {
-        "risk_score": 82,
+        "risk_score": 87,
         "risk_label": "high",
-        "evidence_strength": 0.87,
-        "damage_severity": 0.85,
+        "evidence_strength": 0.92,
+        "damage_severity": 0.88,
         "financial_exposure": 0.95,
         "urgency": 1.0,
         "inconsistency_penalty": 0.0
@@ -293,7 +318,27 @@
           "vision_text_score": 0.10,
           "model_adjudication_score": 0.05
         },
-        "calibration_note": "High-confidence match: shipment ID found in both invoice and complaint"
+        "calibration_note": "High-confidence match: shipment ID found in both invoice and complaint",
+        "match_details": {
+          "shipment_match": {
+            "invoice_val": "SHP-10488",
+            "complaint_val": "SHP-10488",
+            "status": "Matched",
+            "confidence": 1.0
+          },
+          "temporal_match": {
+            "invoice_val": "2026-06-01",
+            "complaint_val": "2026-06-03",
+            "status": "Valid Timeline",
+            "confidence": 0.96
+          },
+          "damage_match": {
+            "complaint_val": "crushed corner, water damage",
+            "vision_val": "crushed corner, water stains",
+            "status": "Matched",
+            "confidence": 0.94
+          }
+        }
       },
       "explanation_id": "expl_001"
     },
@@ -326,7 +371,15 @@
           "vision_text_score": 0.10,
           "model_adjudication_score": 0.05
         },
-        "calibration_note": "Text + vision corroboration of damage type"
+        "calibration_note": "Text + vision corroboration of damage type",
+        "match_details": {
+          "damage_match": {
+            "complaint_val": "crushed corner",
+            "vision_val": "crushed corner",
+            "status": "Matched",
+            "confidence": 0.94
+          }
+        }
       }
     },
     {
@@ -366,7 +419,7 @@
     { "id": "sref_003", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Invoice No: INV-2024-8841", "char_start": 10, "char_end": 35, "hash": "abc003" },
     { "id": "sref_004", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "Invoice No: INV-2024-8841, dated 2024-11-15", "char_start": 220, "char_end": 264, "hash": "abc004" },
     { "id": "sref_005", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "TOTAL: $63,600.00", "char_start": 800, "char_end": 818, "hash": "abc005" },
-    { "id": "sref_006", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Date: 2024-11-15", "char_start": 30, "char_end": 46, "hash": "abc006" },
+    { "id": "sref_006", "document_id": "doc_invoice", "kind": "text_span", "page": 1, "text": "Date: 2026-06-01", "char_start": 30, "char_end": 46, "hash": "abc006" },
     { "id": "sref_007", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "CRUSHED CORNER: Multiple cartons sustained crushed corner damage.", "char_start": 450, "char_end": 514, "hash": "abc007" },
     { "id": "sref_008", "document_id": "doc_image", "kind": "vision_label", "page": null, "text": "crushed corner damage visible on pallet cartons", "hash": "abc008" },
     { "id": "sref_009", "document_id": "doc_email", "kind": "text_span", "page": null, "text": "WATER DAMAGE: Three cartons show clear water stain marks and wet packaging.", "char_start": 520, "char_end": 595, "hash": "abc009" },
@@ -378,20 +431,84 @@
     {
       "id": "expl_001",
       "incident_id": "demo-incident-001",
-      "summary": "Incident involving shipment SHP-10488 with reported crushed corner and water damage — assessed as HIGH risk (82/100).",
+      "summary": "13-unit shortage confirmed across invoice and complaint.",
       "why": [
-        "Shipment ID SHP-10488 confirmed in both invoice (INV-2024-8841) and complaint email.",
-        "Damage types corroborated across text and vision: crushed corner, water damage.",
-        "3 high-confidence cross-document links established.",
-        "1 probable link requires manual review."
+        "Invoice INV-2024-8841 billed 500 units; complaint email reports 487 received.",
+        "Shipment ID SHP-10488 confirmed in both invoice and customer complaint.",
+        "Damage photo shows crushed corners and water stains aligning with complaint details."
       ],
       "uncertainty": [
-        "Image analysis may not capture full extent of internal component damage.",
-        "Shortage count (13 units) based solely on complainant's statement — not independently verified."
+        "Uncertainty: Image quality could hide further internal component details."
       ],
-      "recommended_action": "Escalate for immediate investigation — high damage severity and financial exposure of $63,600.",
-      "risk_score": 82,
-      "risk_label": "high"
+      "recommended_action": "Initiate insurance claim and contact logistics provider immediately.",
+      "risk_score": 87.0,
+      "risk_label": "high",
+      "supporting_evidence": [
+        {
+          "title": "Shipment ID Match",
+          "value": "SHP-10488 found in Invoice PDF and Complaint Email",
+          "confidence": 100,
+          "doc": "Invoice PDF, Complaint Email"
+        },
+        {
+          "title": "Image Damage Detection",
+          "value": "Crushed corner and water stains visible in Photo",
+          "confidence": 94,
+          "doc": "Damage Photo"
+        },
+        {
+          "title": "Complaint Consistency",
+          "value": "Complaint text matches photo observation details",
+          "confidence": 96,
+          "doc": "Complaint Email, Damage Photo"
+        }
+      ],
+      "conflicting_evidence": [],
+      "recommendations": [
+        {
+          "action": "Initiate insurance claim",
+          "rationale": "High damage severity and financial exposure of $63,600.",
+          "evidence_sources": ["Invoice PDF", "Complaint Email", "Damage Photo"]
+        },
+        {
+          "action": "Contact logistics provider",
+          "rationale": "Transit damage detected across multiple cartons.",
+          "evidence_sources": ["Invoice PDF", "Damage Photo"]
+        },
+        {
+          "action": "Flag shipment for review",
+          "rationale": "Shortage discrepancy of 13 units ($1,560) detected.",
+          "evidence_sources": ["Invoice PDF", "Complaint Email"]
+        }
+      ],
+      "executive_summary": "Discrepancy detected and transit damage confirmed for shipment SHP-10488. A shortage of 13 units was confirmed between the Invoice (500 units billed) and the Customer Complaint (487 units received), representing an estimated financial loss of $1,560.00. Physical package damage and water staining were visual-corroborated.",
+      "timeline_reconstruction": [
+        {"timestamp": "2026-06-01", "event": "Invoice INV-2024-8841 generated for 500 units of Electronic Components.", "evidence_source": "Invoice PDF"},
+        {"timestamp": "2026-06-03", "event": "Customer logs urgent complaint SHP-10488 reporting caved corners and water stains.", "evidence_source": "Complaint Email"},
+        {"timestamp": "2026-06-03", "event": "Gemini Vision detects crushed corners (92% confidence) and water stains on pallet cartons.", "evidence_source": "Damage Photo"}
+      ],
+      "evidence_consistency": [
+        {"item": "Shipment ID (SHP-10488)", "details": "Identical shipment key confirmed in Invoice metadata and customer complaint email.", "status": "consistent", "confidence": 1.0},
+        {"item": "Invoice Number (INV-2024-8841)", "details": "Cross-referenced in customer complaint subject header and invoice document.", "status": "consistent", "confidence": 0.98},
+        {"item": "Damage Modality", "details": "Complaint description of caved packaging matches crushed corner labels detected in image analysis.", "status": "consistent", "confidence": 0.94}
+      ],
+      "contradiction_analysis": [
+        {"conflict": "Delivered quantity mismatch (500 invoiced vs 487 reported received)", "source_a": "Invoice PDF", "source_b": "Complaint Email", "resolution": "Shortage of 13 units confirmed; consistent with package breach and transit handling anomalies."}
+      ],
+      "financial_impact": {
+        "estimated_loss": 1560.00,
+        "currency": "USD",
+        "breakdown": "13 missing Electronic Components units valued at $120.00 per unit under Invoice INV-2024-8841."
+      },
+      "root_cause_hypotheses": [
+        {"hypothesis": "Transit damage and cargo tampering during logistics handling.", "confidence": 0.94, "supporting_evidence": ["Invoice vs complaint quantity mismatch", "Crushed corners and water stains visible on pallet photo", "Complaint logs match vision labels"], "negating_evidence": ["None - carrier records missing"]}
+      ],
+      "prioritized_actions": [
+        {"priority": "high", "action": "Initiate insurance claim", "rationale": "High damage severity and package breach resulting in $1,560 unit shortage.", "evidence_ref": "Invoice PDF, Complaint Email, Damage Photo"},
+        {"priority": "medium", "action": "Contact logistics provider", "rationale": "Transit damage and water stains are indicative of carrier negligence.", "evidence_ref": "Damage Photo"},
+        {"priority": "medium", "action": "Flag shipment for review", "rationale": "Shortage discrepancy requires warehouse dispatch audit.", "evidence_ref": "Invoice PDF, Complaint Email"}
+      ],
+      "investigation_narrative": "Shipment SHP-10488 was dispatched on June 1, carrying 500 Electronic Components units invoiced at $63,600.00. On June 3, the customer logged an urgent complaint reporting that only 487 units were received, representing a shortage of 13 units ($1,560.00). The customer complaint referenced a dented package with caved corners and water stains. Damage photo analysis using Gemini Vision detected crushed packaging (92% confidence) and water exposure stains on the lower cartons. Shipment identifiers and invoice numbers matched exactly across all evidence sources. No contradictory evidence was found, confirming a physical breach of the cargo. The most likely root cause is transit damage and cargo leakage during shipping handling."
     }
   ]
 }

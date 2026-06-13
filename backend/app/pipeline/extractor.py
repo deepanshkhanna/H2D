@@ -28,10 +28,9 @@ DATE_PATTERNS = [
 ]
 
 AMOUNT_PATTERNS = [
-    re.compile(r"\$\s*(\d[\d,]*\.?\d*)\b"),
-    re.compile(r"\b(\d[\d,]*\.?\d*)\s*(?:USD|INR|EUR|GBP)\b", re.IGNORECASE),
-    re.compile(r"\bAmount\s*:?\s*\$?\s*(\d[\d,]*\.?\d*)\b", re.IGNORECASE),
-    re.compile(r"\bTotal\s*:?\s*\$?\s*(\d[\d,]*\.?\d*)\b", re.IGNORECASE),
+    re.compile(r"(?:\$|INR|Rs\.?|EUR|€|GBP|£)\s*(\d[\d,]*\.?\d*)\b", re.IGNORECASE),
+    re.compile(r"\b(\d[\d,]*\.?\d*)\s*(?:\$|USD|INR|Rs\.?|EUR|€|GBP|£)\b", re.IGNORECASE),
+    re.compile(r"\b(?:Amount|Total)\s*:?\s*(?:\$|INR|Rs\.?|EUR|€|GBP|£)?\s*(\d[\d,]*\.?\d*)\b", re.IGNORECASE),
 ]
 
 PARTY_PATTERNS = [
@@ -177,11 +176,12 @@ def _extract_from_text(
             })
 
     # Damage keywords
-    text_lower = text.lower()
     for damage_type, keywords in DAMAGE_KEYWORDS.items():
         for kw in keywords:
-            idx = text_lower.find(kw)
-            if idx != -1:
+            pattern = re.compile(rf"\b{re.escape(kw)}\b", re.IGNORECASE)
+            m = pattern.search(text)
+            if m:
+                idx = m.start()
                 snippet = text[max(0, idx - 20): idx + len(kw) + 40]
                 sref_id = _make_source_ref_id(doc_id, kw, idx)
                 source_refs.append({

@@ -48,16 +48,16 @@
   --radius: 0.5rem;
 
   /* Obsidian base — copied verbatim from selected direction */
-  --background: oklch(0.145 0.012 270);          /* #09090b */
+  --background: oklch(0.145 0.012 270); /* #09090b */
   --foreground: oklch(0.97 0.005 270);
-  --surface: oklch(0.18 0.012 270);              /* #0e0e11 */
+  --surface: oklch(0.18 0.012 270); /* #0e0e11 */
   --surface-2: oklch(0.22 0.012 270);
   --card: oklch(0.18 0.012 270);
   --card-foreground: oklch(0.97 0.005 270);
   --popover: oklch(0.18 0.012 270);
   --popover-foreground: oklch(0.97 0.005 270);
 
-  --primary: oklch(0.62 0.18 258);               /* electric blue #3b82f6 */
+  --primary: oklch(0.62 0.18 258); /* electric blue #3b82f6 */
   --primary-foreground: oklch(0.99 0 0);
 
   --secondary: oklch(0.25 0.012 270);
@@ -69,10 +69,10 @@
   --accent: oklch(0.28 0.02 258);
   --accent-foreground: oklch(0.97 0.005 270);
 
-  --destructive: oklch(0.62 0.17 25);            /* muted red #ef4444-ish */
+  --destructive: oklch(0.62 0.17 25); /* muted red #ef4444-ish */
   --destructive-foreground: oklch(0.99 0 0);
 
-  --warning: oklch(0.74 0.15 65);                /* amber #f59e0b */
+  --warning: oklch(0.74 0.15 65); /* amber #f59e0b */
   --warning-foreground: oklch(0.15 0.012 270);
 
   --success: oklch(0.74 0.17 152);
@@ -84,8 +84,11 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -101,25 +104,145 @@
 }
 
 @keyframes pulse-line {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.55; }
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
-.pulse-line { animation: pulse-line 4s ease-in-out infinite; }
+.pulse-line {
+  animation: pulse-line 4s ease-in-out infinite;
+}
 
 @keyframes drift {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(2px, -2px); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, -2px);
+  }
 }
-.drift { animation: drift 8s ease-in-out infinite; }
+.drift {
+  animation: drift 8s ease-in-out infinite;
+}
 
 @keyframes scanline {
-  0% { transform: translateX(-10%); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateX(110%); opacity: 0; }
+  0% {
+    transform: translateX(-10%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(110%);
+    opacity: 0;
+  }
 }
 
 .dot-grid {
   background-image: radial-gradient(oklch(0.27 0.012 270) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* ── Evidence Graph effects ────────────────────────────────────────────────── */
+
+@keyframes edge-pulse {
+  0%,
+  100% {
+    stroke-opacity: 0.25;
+  }
+  50% {
+    stroke-opacity: 0.85;
+  }
+}
+.edge-glow {
+  animation: edge-pulse 3s ease-in-out infinite;
+}
+
+@keyframes edge-flow {
+  0% {
+    stroke-dashoffset: 12;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+.edge-flow {
+  stroke-dasharray: 6 6;
+  animation: edge-flow 1.5s linear infinite;
+}
+
+/* Graph container scanline sweep */
+@keyframes graph-scanline {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(200%);
+    opacity: 0;
+  }
+}
+.graph-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, oklch(0.62 0.18 258 / 0.06), transparent);
+  animation: graph-scanline 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Node hover glow ring */
+@keyframes node-glow {
+  0%,
+  100% {
+    r: 8;
+    opacity: 0.12;
+  }
+  50% {
+    r: 11;
+    opacity: 0.22;
+  }
+}
+.node-glow-ring {
+  animation: node-glow 2s ease-in-out infinite;
+}
+
+/* ── General UI utilities ──────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out both;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

@@ -38,25 +38,39 @@ def _parse_pdf_pymupdf(path: str) -> dict[str, Any]:
     """Parse PDF with PyMuPDF (fitz)."""
     import fitz  # type: ignore
 
-    doc = fitz.open(path)
-    full_text = ""
-    pages = []
-    for i, page in enumerate(doc):
-        text = page.get_text("text")
-        full_text += text + "\n"
-        pages.append({
-            "page": i + 1,
-            "text": text,
-            "width": page.rect.width,
-            "height": page.rect.height,
-        })
-    return {
-        "parser": "pymupdf",
-        "text": full_text,
-        "page_count": len(doc),
-        "pages": pages,
-        "tables": [],
-    }
+    try:
+        doc = fitz.open(path)
+        full_text = ""
+        pages = []
+        for i, page in enumerate(doc):
+            text = page.get_text("text")
+            full_text += text + "\n"
+            pages.append({
+                "page": i + 1,
+                "text": text,
+                "width": page.rect.width,
+                "height": page.rect.height,
+            })
+        return {
+            "parser": "pymupdf",
+            "text": full_text,
+            "page_count": len(doc),
+            "pages": pages,
+            "tables": [],
+        }
+    except Exception as e:
+        logger.warning("PyMuPDF failed to parse %s, trying plain text fallback: %s", path, e)
+        try:
+            text = Path(path).read_text(encoding="utf-8", errors="replace")
+            return {
+                "parser": "text_fallback",
+                "text": text,
+                "page_count": 1,
+                "pages": [{"page": 1, "text": text}],
+                "tables": [],
+            }
+        except Exception:
+            raise e
 
 
 def parse_pdf(path: str, incident_id: str) -> dict[str, Any]:

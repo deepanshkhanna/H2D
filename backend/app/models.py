@@ -125,6 +125,7 @@ class JobEvent(SQLModel, table=True):
     job_id: str = SMField(index=True)
     stage: str
     message: str
+    duration_ms: Optional[float] = None
     payload_json: Optional[str] = SMField(default=None, sa_column=Column(Text))
     created_at: datetime = SMField(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -154,6 +155,7 @@ class JobEventResponse(BaseModel):
     job_id: str
     stage: str
     message: str
+    duration_ms: Optional[float] = None
     payload: Optional[dict[str, Any]] = None
     created_at: datetime
 
@@ -213,6 +215,7 @@ class ConfidenceBreakdown(BaseModel):
         "model_adjudication_score": 0.05,
     })
     calibration_note: str = ""
+    match_details: Optional[dict[str, Any]] = None
 
 
 class VisualMeta(BaseModel):
@@ -278,6 +281,19 @@ class Explanation(BaseModel):
     recommended_action: str = ""
     risk_score: float = 0.0
     risk_label: RiskLabel = RiskLabel.low
+    supporting_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    conflicting_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    executive_summary: Optional[str] = None
+    timeline_reconstruction: list[dict[str, Any]] = Field(default_factory=list)
+    evidence_consistency: list[dict[str, Any]] = Field(default_factory=list)
+    contradiction_analysis: list[dict[str, Any]] = Field(default_factory=list)
+    financial_impact: Optional[dict[str, Any]] = None
+    root_cause_hypotheses: list[dict[str, Any]] = Field(default_factory=list)
+    prioritized_actions: list[dict[str, Any]] = Field(default_factory=list)
+    investigation_narrative: Optional[str] = None
+    best_explanation: Optional[str] = None
+    competing_hypotheses: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class EvidenceGraph(BaseModel):
